@@ -2178,7 +2178,7 @@ function bAddCap(cap,n){ const it=uniqN(n||12,()=>{let a=wrnd(1,Math.min(8,cap-1
   return sX(`합이 ${cap}까지의 덧셈`,"빈칸에 답을 쓰세요.",mrows(it,true),ansline(it)); }
 function bSub1(mx){ const it=uniqN(12,()=>{const a=wrnd(2,mx),b=wrnd(1,a);return P(`${a} − ${b}`,a-b);},x=>x.q);
   return sX("한 자리 뺄셈","빈칸에 답을 쓰세요.",mrows(it,true),ansline(it)); }
-function bBonds(){ const it=uniqN(8,()=>{const n=wrnd(3,9),g=wrnd(1,n-1);return WR()<.5?{q:`${n} 은 ${g} 하고 ▢`,a:n-g}:{q:`${g} 과 ▢ 를 모으면 ${n}`,a:n-g};},x=>x.q);
+function bBonds(){ const it=uniqN(10,()=>{const n=wrnd(3,9),g=wrnd(1,n-1);return WR()<.5?{q:`${n} 은 ${g} 하고 ▢`,a:n-g}:{q:`${g} 과 ▢ 를 모으면 ${n}`,a:n-g};},x=>x.q);
   return sX("모으고 가르기","▢에 알맞은 수를 쓰세요.",mrows(it),ansline(it)); }
 function bMake10(){ const it=uniqN(8,()=>{const n=wrnd(1,9);return WR()<.5?{q:`${n} + ▢ = 10`,a:10-n}:{q:`▢ + ${n} = 10`,a:10-n};},x=>x.q);
   const tf=`<div class="tenframe">${Array.from({length:10},(_,i)=>`<span class="${i<6?"f":"h"}"></span>`).join("")}</div><div class="tfcap">보기 · 6개가 있어요. 4개를 더하면 10 → 6과 4는 짝꿍</div>`;
@@ -2186,18 +2186,18 @@ function bMake10(){ const it=uniqN(8,()=>{const n=wrnd(1,9);return WR()<.5?{q:`$
 function bTeen(){ const it=uniqN(8,()=>{const o=wrnd(1,9);const f=wrnd(0,2);
     if(f===0)return{q:`10 하고 ${o} 은 ▢`,a:10+o}; if(f===1)return{q:`1${o} 은 10 하고 ▢`,a:o}; return{q:`10 + ${o} = ▢`,a:10+o};},x=>x.q);
   return sX("십몇 알기","11~19는 ‘10 하고 몇’이에요. ▢를 채워요.",mrows(it),ansline(it)); }
-function bOrder(mx){ const it=uniqN(8,()=>{const n=wrnd(2,mx-1);const f=wrnd(0,2);
+function bOrder(mx){ const it=uniqN(10,()=>{const n=wrnd(2,mx-1);const f=wrnd(0,2);
     if(f===0)return{q:`${n} 다음 수는 ▢`,a:n+1}; if(f===1)return{q:`${n} 앞의 수는 ▢`,a:n-1}; return{q:`${n-1} , ▢ , ${n+1}`,a:n};},x=>x.q);
   return sX("수의 순서","다음 수·앞의 수·사이 수를 써요.",mrows(it),ansline(it)); }
-function bCompare(mx){ const it=uniqN(8,()=>{let a=wrnd(2,mx),b=wrnd(2,mx);while(a===b)b=wrnd(2,mx);return{q:`${a} 와 ${b} 중 더 큰 수는 ▢`,a:Math.max(a,b)};},x=>x.q);
+function bCompare(mx){ const it=uniqN(10,()=>{let a=wrnd(2,mx),b=wrnd(2,mx);while(a===b)b=wrnd(2,mx);return{q:`${a} 와 ${b} 중 더 큰 수는 ▢`,a:Math.max(a,b)};},x=>x.q);
   return sX("큰 수 찾기","두 수 중 더 큰 수를 써요.",mrows(it),ansline(it)); }
-function bTens(mx){ const it=uniqN(8,()=>{const f=wrnd(0,2);const t=wrnd(2,Math.floor(mx/10));
+function bTens(mx){ const it=uniqN(10,()=>{const f=wrnd(0,2);const t=wrnd(2,Math.floor(mx/10));
     if(f===0)return{q:`10이 ${t}개면 ▢`,a:t*10}; if(f===1)return{q:`${t}0 다음 십은 ▢`,a:t*10+10}; return{q:`10, 20, ▢, 40`,a:30};},x=>x.q);
   return sX("몇십 알기","10씩 묶어 세어 ▢를 채워요.",mrows(it),ansline(it)); }
-function bPlace2(){ const it=uniqN(8,()=>{const t=wrnd(2,9),o=wrnd(1,9),n=t*10+o,f=wrnd(0,2);
+function bPlace2(){ const it=uniqN(10,()=>{const t=wrnd(2,9),o=wrnd(1,9),n=t*10+o,f=wrnd(0,2);
     if(f===0)return{q:`10이 ${t}개, 1이 ${o}개인 수는 ▢`,a:n}; if(f===1)return{q:`${n} 은 10이 ▢개`,a:t}; return{q:`${n} 은 1이 ▢개 (일의 자리)`,a:o};},x=>x.q);
   return sX("자릿값","▢에 알맞은 수를 써요.",mrows(it),ansline(it)); }
-function bPlace3(){ const it=uniqN(8,()=>{const h=wrnd(1,9),t=wrnd(0,9),o=wrnd(0,9),n=h*100+t*10+o,f=wrnd(0,2);
+function bPlace3(){ const it=uniqN(10,()=>{const h=wrnd(1,9),t=wrnd(0,9),o=wrnd(0,9),n=h*100+t*10+o,f=wrnd(0,2);
     if(f===0)return{q:`100이 ${h}개, 10이 ${t}개, 1이 ${o}개는 ▢`,a:n}; if(f===1)return{q:`${n} 의 백의 자리 수는 ▢`,a:h}; return{q:`${n} 의 십의 자리 수는 ▢`,a:t};},x=>x.q);
   return sX("세 자리 수의 자릿값","백·십·일 자리를 생각하며 써요.",mrows(it),ansline(it)); }
 function bAdd2p1(carry){ const it=uniqN(12,()=>{const t=wrnd(1,8);let o,b;
@@ -2229,14 +2229,14 @@ function bThree(){ const it=uniqN(9,()=>{ const a=wrnd(2,7),b=wrnd(2,7);
     if(WR()<.6){ const c=wrnd(1,6); return P(`${a} + ${b} + ${c}`,a+b+c); }
     const c=wrnd(1,a+b-1); return P(`${a} + ${b} − ${c}`,a+b-c); },x=>x.q);
   return sX("세 수의 계산","앞에서부터 차례로 계산해요.",mrows(it,true),ansline(it)); }
-function bSeq(){ const it=uniqN(6,()=>{const step=wpick([1,2,5,10,-1,-2]);let st=step>0?wrnd(1,40):wrnd(30,60);const arr=[st,st+step,st+2*step,st+3*step,st+4*step];const bi=wrnd(1,3);return{q:arr.map((v,i)=>i===bi?"▢":v).join(", "),a:arr[bi]};},x=>x.q);
+function bSeq(){ const it=uniqN(8,()=>{const step=wpick([1,2,5,10,-1,-2]);let st=step>0?wrnd(1,40):wrnd(30,60);const arr=[st,st+step,st+2*step,st+3*step,st+4*step];const bi=wrnd(1,3);return{q:arr.map((v,i)=>i===bi?"▢":v).join(", "),a:arr[bi]};},x=>x.q);
   return sX("수 규칙 찾기","규칙을 찾아 ▢에 알맞은 수를 써요.",mrows(it),ansline(it)); }
-function bClassify(){ const it=uniqN(4,()=>{const c=wpick([["과일이 아닌 것","사과 · 당근 · 딸기","당근"],["동물이 아닌 것","강아지 · 책상 · 고양이","책상"],["탈것이 아닌 것","버스 · 사과 · 자동차","사과"],["채소가 아닌 것","오이 · 사탕 · 당근","사탕"],["색깔이 아닌 것","빨강 · 토끼 · 파랑","토끼"]]);return{q:`${c[0]}: ${c[1]} → `,a:c[2]};},x=>x.q);
+function bClassify(){ const it=uniqN(5,()=>{const c=wpick([["과일이 아닌 것","사과 · 당근 · 딸기","당근"],["동물이 아닌 것","강아지 · 책상 · 고양이","책상"],["탈것이 아닌 것","버스 · 사과 · 자동차","사과"],["채소가 아닌 것","오이 · 사탕 · 당근","사탕"],["색깔이 아닌 것","빨강 · 토끼 · 파랑","토끼"]]);return{q:`${c[0]}: ${c[1]} → `,a:c[2]};},x=>x.q);
   return sX("무리 짓기","같은 종류가 아닌 것을 찾아 써요.",mrows(it),ansline(it)); }
 function bMul(banks){ const it=uniqN(12,()=>{const g=wpick(banks),h=wrnd(1,9);return P(`${g} × ${h}`,g*h);},x=>x.q);
   const nm=banks.length===1?`${banks[0]}단`:banks.join("·")+"단";
   return sX(`곱셈구구 ${nm}`,"곱셈표를 떠올리며 답을 써요.",mrows(it,true),ansline(it)); }
-function bMulMeaning(){ const it=uniqN(6,()=>{const g=wpick([2,3,4,5]),c=wrnd(2,5);return WR()<.5?{q:`${g} 씩 ${c} 묶음 = ${g} × ${c} = ▢`,a:g*c}:{q:`${(g+"+").repeat(c-1)}${g} = ${g} × ${c} = ▢`,a:g*c};},x=>x.q);
+function bMulMeaning(){ const it=uniqN(8,()=>{const g=wpick([2,3,4,5]),c=wrnd(2,5);return WR()<.5?{q:`${g} 씩 ${c} 묶음 = ${g} × ${c} = ▢`,a:g*c}:{q:`${(g+"+").repeat(c-1)}${g} = ${g} × ${c} = ▢`,a:g*c};},x=>x.q);
   return sX("곱셈의 뜻","같은 수를 여러 번 더하면 곱셈! ▢를 채워요.",mrows(it),ansline(it)); }
 function bMulWord(){ const w=[{q:`한 봉지에 사탕이 ${'x'}개씩 ${'y'}봉지 있어요. 사탕은 모두 몇 개일까요?`}];
   const its=uniqN(3,()=>{const g=wrnd(2,6),c=wrnd(2,6);return{q:`한 접시에 쿠키가 ${g}개씩 ${c}접시 있어요. 쿠키는 모두 몇 개일까요?`,a:g*c,u:"개"};},x=>x.q);
@@ -2248,7 +2248,7 @@ function bClockDraw(fine){ const dt=uniqN(3,()=>({h:wrnd(1,12),m:fine?wpick([0,1
 function bMoney(){ const it=uniqN(4,()=>{const c5=wrnd(0,1),c1=wrnd(1,4),c50=wrnd(0,1),c10=wrnd(0,4);const total=c5*500+c1*100+c50*50+c10*10;
     return{html:`<div class="mrow">${coinRow(c5,c1,c50,c10)} = <span class="blank" style="min-width:56px"></span>원<span class="ans"> ${total}</span></div>`,a:total};},it=>it.a);
   return sX("돈 계산","동전을 모두 더하면 얼마일까요?",it.map(m=>m.html).join(""),it.map((m,i)=>`${i+1}) ${m.a}원`).join("&nbsp; ")); }
-function bLength(){ const its=uniqN(6,()=>{let a=wrnd(2,30),b=wrnd(2,30);while(a===b)b=wrnd(2,30);return{q:`${a}cm 와 ${b}cm 중 더 긴 것은 ▢cm`,a:Math.max(a,b)};},x=>x.q);
+function bLength(){ const its=uniqN(8,()=>{let a=wrnd(2,30),b=wrnd(2,30);while(a===b)b=wrnd(2,30);return{q:`${a}cm 와 ${b}cm 중 더 긴 것은 ▢cm`,a:Math.max(a,b)};},x=>x.q);
   return sX("길이 재기 (cm)","더 긴 쪽을 찾아 cm로 써요.",mrows(its),ansline(its)); }
 function bWordAdd(lo1,hi1,lo2,hi2){ const w=wordProblems(3,mkAddW(lo1,hi1,lo2,hi2)); return sX("덧셈 문장제","식을 쓰고 답을 구해요.",w.join(""),"위 정답 참고"); }
 function bWordSub(lo1,hi1,ms){ const w=wordProblems(3,mkSubW(lo1,hi1,ms)); return sX("뺄셈 문장제","식을 쓰고 답을 구해요.",w.join(""),"위 정답 참고"); }
