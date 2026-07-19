@@ -793,6 +793,9 @@ function renderChallenge(){
 }
 
 /* ===== Level Test (수준 진단 · 7단계 · 단계당 2문제 검증) ===== */
+const LT_SENT=[["학교에 / 나는 / 갑니다","나는 학교에 갑니다."],["당근을 / 토끼가 / 먹어요","토끼가 당근을 먹어요."],
+  ["하늘에 / 새가 / 날아요","새가 하늘에 날아요."],["책을 / 나는 / 읽어요","나는 책을 읽어요."],
+  ["그림을 / 동생이 / 그려요","동생이 그림을 그려요."]];
 const LVL_NAMES=["도전 전","씨앗","새싹","꽃","나무","숲","큰 나무","별"];
 const LVL_BAND=["","만 4세 기초","만 4세 완성","만 5세 기본","만 5세 상위","취학 전 완성","초1 수준 선행","초1 상위 선행"];
 function ltQ(skill,text,say,choices,lang,rowEmojis,passage){ return {skill,text,say,choices,sayLang:lang,rowEmojis,passage}; }
@@ -868,7 +871,7 @@ function ltKor(l){
   if(l===4){
     if(v===0){ const [ok,no]=pick(SPELL);
       return ltQ("맞춤법","바르게 쓴 낱말은 어느 것일까요?","바르게 쓴 낱말을 찾아보세요",shuffle([{show:ok,ok:true},{show:no,ok:false}])); }
-    const ms=pick(MAKESENT); const scr=ms[0].split(" / "); const wrongSent=(scr[1]+" "+scr[2]+" "+scr[0]+".").replace("..",".");
+    const ms=pick(LT_SENT); const scr=ms[0].split(" / "); const wrongSent=(scr[1]+" "+scr[2]+" "+scr[0]+".").replace("..",".");
     return ltQ("문장 만들기","바른 문장은 어느 것일까요?","바른 문장을 찾아보세요",
       shuffle([{show:ms[1],ok:true},{show:wrongSent,ok:false}])); }
   if(l===5){
@@ -983,7 +986,9 @@ function runLT(){
     bar.style.width=(Math.min(qn-1,TOTALQ)/TOTALQ*100)+"%";
     dotEl.style.background=sub.color;
     subEl.textContent=`${sub.label} · ${lvl}단계`;
-    const p=sub.g(lvl);
+    let p=null;
+    for(let t=0;t<5&&!p;t++){ try{ p=sub.g(lvl); }catch(e){ console.error("LT gen fail",sub.k,lvl,e); } }
+    if(!p){ si++; lvl=1; okN=0; ngN=0; return ask(); }   /* 생성 실패 시 다음 과목으로 — 멈춤 방지 */
     const row=p.rowEmojis?`<div class="q-row">${p.rowEmojis.map(e=>`<span>${e}</span>`).join("")}</div>`:"";
     const psg=p.passage?`<div class="passage" style="max-width:540px;margin:16px auto 0;text-align:left;font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink)">${p.passage}</div>`:"";
     qb.innerHTML=row+psg+`<div class="q-text"${p.passage?' style="font-size:24px;margin-top:14px"':''}>${p.text}</div><div class="q-choices${p.choices.length===2?" two":""}"></div>`;
