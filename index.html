@@ -142,6 +142,47 @@
     padding:16px 18px; box-shadow:var(--sh-s); max-width:200px; }
   .touch-pile.pop{ border-color:var(--ok); background:color-mix(in srgb,var(--ok) 12%, var(--surface)); }
 
+  /* ---------- 이야기 읽기 ---------- */
+  .read-wrap{ max-width:660px; margin:0 auto; }
+  .read-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .read-title{ font-size:20px; font-weight:800; letter-spacing:-.4px; }
+  .read-body{ background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px 24px;
+    font-size:19px; font-weight:600; line-height:2; box-shadow:var(--sh-s); letter-spacing:-.2px; }
+  .read-q .q-choices{ grid-template-columns:1fr; max-width:520px; gap:10px; }
+  .read-q .opt{ min-height:64px; padding:16px; }
+
+  /* ---------- 학습 지도 ---------- */
+  .map-hero{ display:flex; align-items:center; gap:22px; background:var(--surface); border:1px solid var(--line);
+    border-radius:24px; padding:22px 26px; box-shadow:var(--sh-m); flex-wrap:wrap; margin-bottom:16px; }
+  .map-hero-txt{ flex:1; min-width:240px; }
+  .map-now{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:6px; }
+  @media(max-width:640px){ .map-now{ grid-template-columns:1fr; } }
+  .mn-box{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:15px 17px; box-shadow:var(--sh-s); }
+  .mn-box.now{ border-color:color-mix(in srgb,var(--math) 45%, var(--line)); background:color-mix(in srgb,var(--math) 5%, var(--surface)); }
+  .mn-label{ font-size:12px; font-weight:800; color:var(--ink-3); margin-bottom:6px; letter-spacing:.3px; }
+  .mn-val{ font-size:17px; font-weight:800; letter-spacing:-.3px; }
+  .mn-detail{ font-size:12px; font-weight:600; color:var(--ink-2); margin-top:4px; }
+  .map-course{ background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:16px 18px;
+    margin-bottom:12px; box-shadow:var(--sh-s); }
+  .map-course.future{ opacity:.62; }
+  .map-course.cur{ border-color:color-mix(in srgb,var(--math) 40%, var(--line)); box-shadow:var(--sh-m); }
+  .mc-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .mc-badge{ color:#fff; font-weight:800; font-size:12px; padding:4px 11px; border-radius:999px; }
+  .mc-name{ font-weight:800; font-size:17px; letter-spacing:-.4px; }
+  .mc-grade{ font-size:12.5px; font-weight:700; color:var(--ink-3); }
+  .mc-prog{ margin-left:auto; font-size:12.5px; font-weight:800; color:var(--math); }
+  .map-units{ display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+  @media(max-width:640px){ .map-units{ grid-template-columns:1fr; } }
+  .map-unit{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; padding:6px 0; border-bottom:1px dashed var(--line-2); }
+  .map-unit .mu-dot{ width:20px; height:20px; border-radius:50%; display:inline-grid; place-items:center; font-size:12px;
+    font-weight:800; flex:none; background:var(--line-2); color:var(--ink-3); }
+  .map-unit.done .mu-dot{ background:var(--ok); color:#fff; }
+  .map-unit.now .mu-dot{ background:var(--math); color:#fff; animation:pulse 2s ease infinite; }
+  .map-unit .mu-n{ font-size:11.5px; font-weight:800; color:var(--ink-3); min-width:38px; }
+  .map-unit .mu-title{ font-size:14.5px; font-weight:700; }
+  .map-unit.now .mu-title{ color:var(--math); }
+  .map-unit .mu-sub{ font-size:11.5px; font-weight:600; color:var(--ink-3); flex-basis:100%; padding-left:28px; }
+
   /* ---------- menu ---------- */
   .mgroup{ margin-bottom:28px; }
   .menu-label{ display:flex; align-items:center; gap:12px; font-size:11.5px; font-weight:800; color:var(--ink-3);
@@ -623,16 +664,18 @@ const IC={
   book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3"/><path d="M9 10h6M9 13.5h6M9 17h3.5"/></svg>',
   parent:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>',
   level:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15a7 7 0 0 1 14 0"/><path d="M12 15l3.8-3.8"/><path d="M4 19h16"/></svg>',
+  map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 4 7v12l5-2 6 2 5-2V5l-5 2-6-2z"/><path d="M9 5v12M15 7v12"/></svg>',
 };
 const MENU=[
-  {id:"korean",   grp:"오늘의 학습", title:"국어",     en:"Korean",   desc:"어휘력과 사고력을 키우는 낱말 놀이",  ac:"var(--korean)"},
-  {id:"math",     grp:"오늘의 학습", title:"수학",     en:"Math",     desc:"받아올림부터 두 자리 연산까지",      ac:"var(--math)"},
+  {id:"korean",   grp:"오늘의 학습", title:"국어",     en:"Korean",   desc:"이야기 읽기 · 낱말 · 맞춤법",       ac:"var(--korean)"},
+  {id:"math",     grp:"오늘의 학습", title:"수학",     en:"Math",     desc:"수 세기부터 차근차근 (지금은 기초)", ac:"var(--math)"},
   {id:"english",  grp:"오늘의 학습", title:"영어",     en:"English",  desc:"알파벳 음가와 첫 단어 익히기",       ac:"var(--english)"},
   {id:"think",    grp:"오늘의 학습", title:"사고력",   en:"Logic",    desc:"규칙 찾기 · 수 비교 · 순서 추론",    ac:"var(--think)"},
   {id:"challenge",grp:"도전과 보상", title:"도전 퀴즈", en:"Challenge",desc:"약한 유형을 골라 내는 10문제 실전",  ac:"var(--quiz)"},
   {id:"level",    grp:"도전과 보상", title:"레벨 테스트", en:"Level Test",desc:"수준 진단 후 맞춤 시작점 추천",   ac:"#0F87A8"},
   {id:"sticker",  grp:"도전과 보상", title:"스티커판", en:"Reward",   desc:"별을 모아 완성하는 나만의 컬렉션",   ac:"var(--sticker)"},
-  {id:"book",     grp:"문제집 · 학부모", title:"문제집",   en:"Workbook", desc:"120일 커리큘럼 · 하루 3장 인쇄",     ac:"var(--book)"},
+  {id:"map",      grp:"문제집 · 학부모", title:"학습 지도", en:"Roadmap",  desc:"지금 어디까지 · 다음은 무엇 · 전체 길", ac:"#3E7CB1"},
+  {id:"book",     grp:"문제집 · 학부모", title:"문제집",   en:"Workbook", desc:"하루 4장(수·국·영·탐구) 인쇄",     ac:"var(--book)"},
   {id:"parent",   grp:"문제집 · 학부모", title:"부모님",   en:"Parents",  desc:"학습 리포트 · 약점 진단 · 설정",     ac:"var(--parent)"},
 ];
 const menuEl=document.getElementById("menu");
@@ -817,7 +860,7 @@ function renderSection(m){
   secTitle.innerHTML=`<span class="sic" style="--tc:${m.ac}">${IC[m.id]}</span>${m.title}`;
   secBody.innerHTML="";
   ({korean:renderKorean,math:renderMath,english:renderEnglish,think:renderThink,
-    challenge:renderChallenge,level:renderLevel,sticker:renderSticker,book:renderBook,parent:renderParent})[m.id]();
+    challenge:renderChallenge,level:renderLevel,sticker:renderSticker,map:renderMap,book:renderBook,parent:renderParent})[m.id]();
   show(secEl);
 }
 function route(){
@@ -879,12 +922,115 @@ function renderFlash(area,items,lang){ const g=document.createElement("div"); g.
 
 /* ===== Section renderers ===== */
 function renderKorean(){ modeTabs([
+  {label:"📖 이야기 읽기",build:renderReadingCards},
   {label:"🖐 만지며 배우기",build:renderTouchKorean},
   {label:"반대말",build:a=>makeQuizArea(a,"antonym")},
   {label:"맞춤법",build:a=>makeQuizArea(a,"spell")},
   {label:"문장 만들기",build:a=>makeQuizArea(a,"sentence")},
   {label:"조사 넣기",build:a=>makeQuizArea(a,"josa")},
   {label:"수수께끼",build:a=>makeQuizArea(a,"riddle")}]); }
+/* 📖 이야기 읽기 — 지문을 화면에서 읽고(음성) 문제 풀기 (인쇄물의 지문을 태블릿에서도) */
+let readIdx=0;
+function renderReadingCards(area){
+  const pool=PSG1.concat(PSG2).concat(PSG3);
+  const titles=PSG_T1.concat(PSG_T2).concat(PSG_T3);
+  function show(){
+    const p=pool[readIdx%pool.length], title=titles[readIdx%titles.length]||"이야기";
+    area.innerHTML=`<div class="read-wrap">
+      <div class="read-head"><div class="read-title">📖 ${title}</div>
+        <button class="pill" id="rdSpeak">🔊 읽어 주기</button></div>
+      <div class="read-body">${p.t}</div>
+      <div class="read-q" id="rdQ"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+        <button class="pill" id="rdPrev">← 이전 이야기</button>
+        <span class="pill" style="cursor:default">${(readIdx%pool.length)+1} / ${pool.length}</span>
+        <button class="pill accent" id="rdNext" style="--ac:var(--korean)">다음 이야기 →</button></div></div>`;
+    speak(p.t);
+    const qwrap=area.querySelector("#rdQ"); let qi=0;
+    function askQ(){
+      if(qi>=p.q.length){ qwrap.innerHTML=`<div class="hint" style="text-align:center;font-size:18px">🎉 다 읽고 잘 풀었어요!</div>`; return; }
+      const [qq,aa]=p.q[qi];
+      const others=sample(pool.filter(x=>x!==p).flatMap(x=>x.q.map(z=>z[1])).filter(x=>x!==aa),2);
+      const opts=shuffle([{show:aa,ok:true}].concat(others.map(o=>({show:o,ok:false}))));
+      qwrap.innerHTML=`<div class="q-text" style="font-size:19px;margin:14px 0 12px">${qi+1}. ${qq}</div>
+        <div class="q-choices">${opts.map(o=>`<button class="opt" data-ok="${o.ok?1:0}"><span class="ol" style="font-size:19px">${o.show}</span></button>`).join("")}</div>`;
+      speak(qq);
+      qwrap.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+        if(b.dataset.ok==="1"){ b.classList.add("right"); confetti(); speak("딩동댕! 잘했어요!"); record("read",true);
+          [...qwrap.querySelectorAll(".opt")].forEach(x=>x.disabled=true); qi++; setTimeout(askQ,1100); }
+        else { b.classList.add("wrong"); b.disabled=true; speak("글을 다시 읽어 볼까요?"); } });
+    }
+    askQ();
+    area.querySelector("#rdSpeak").onclick=()=>speak(p.t);
+    area.querySelector("#rdNext").onclick=()=>{ readIdx++; show(); };
+    area.querySelector("#rdPrev").onclick=()=>{ readIdx=(readIdx-1+pool.length)%pool.length; show(); };
+  }
+  show();
+}
+/* ===== 📍 학습 지도 — 지금 어디까지, 다음은 무엇, 전체 길 ===== */
+const COURSE_GRADE=["","유아 ~ 초1 준비","초등 1학년","초1 심화 ~ 초2"];
+const MAP_TARGET="2027년 말까지 초등 2학년 수준 완성";
+function renderMap(){
+  const cur=S.course||1;
+  const total=3*TOTAL_DAYS;                 /* 360일 여정 */
+  const doneTotal=courseDoneDays(1)+courseDoneDays(2)+courseDoneDays(3);
+  const pct=Math.round(doneTotal/total*100);
+  const nt=nextTask();
+  const curUnit=Math.floor(courseDoneDays(cur)/10);
+  const dashArc=2*Math.PI*46;
+  let courseHTML="";
+  for(let c=1;c<=3;c++){
+    const cDone=courseDoneDays(c), frontier=Math.floor(cDone/10);
+    const state=c<cur?"past":(c===cur?"cur":"future");
+    let units="";
+    for(let u=0;u<TOTAL_UNITS;u++){
+      let st; if(c<cur) st="done"; else if(c>cur) st="todo";
+      else st= (u<frontier)?"done":(u===frontier?"now":"todo");
+      const icon=st==="done"?"✓":(st==="now"?"●":"○");
+      units+=`<div class="map-unit ${st}">
+        <span class="mu-dot">${icon}</span>
+        <span class="mu-n">${u+1}단원</span>
+        <span class="mu-title">➕ ${MU[u]}</span>
+        <span class="mu-sub">📖 ${KU[u]} · 🔤 ${EU[u]} · 🔍 탐구</span></div>`;
+    }
+    courseHTML+=`<div class="map-course ${state}">
+      <div class="mc-head"><span class="mc-badge" style="background:${c===1?"#189A72":c===2?"#E08A00":"#D6455D"}">${c}단계</span>
+        <span class="mc-name">${COURSE_NAMES[c]}</span>
+        <span class="mc-grade">${COURSE_GRADE[c]}</span>
+        <span class="mc-prog">${state==="past"?"완료 ✓":state==="cur"?`${cDone}/${TOTAL_DAYS}일`:"잠금 · 예정"}</span></div>
+      <div class="map-units">${units}</div></div>`;
+  }
+  secBody.innerHTML=`
+    <div class="map-hero">
+      <div class="ring" style="width:104px;height:104px">
+        <svg viewBox="0 0 100 100" style="width:104px;height:104px;transform:rotate(-90deg)">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="var(--line-2)" stroke-width="9"/>
+          <circle cx="50" cy="50" r="46" fill="none" stroke="var(--math)" stroke-width="9" stroke-linecap="round"
+            stroke-dasharray="${dashArc}" stroke-dashoffset="${dashArc*(1-pct/100)}"/></svg>
+        <div class="rv"><div><b style="font-size:26px">${pct}%</b><br><span>전체 진도</span></div></div></div>
+      <div class="map-hero-txt">
+        <div class="eyebrow" style="color:var(--math)">우리 아이 학습 여정 · 총 360일</div>
+        <h2 style="margin:2px 0 6px;font-size:22px;letter-spacing:-.5px">${S.name?S.name+"는 ":""}지금 <b style="color:var(--math)">${COURSE_NAMES[cur]} ${curUnit+1}단원</b>을 배우고 있어요</h2>
+        <div style="font-size:14px;font-weight:600;color:var(--ink-2)">🎯 목표: <b style="color:var(--ink)">${MAP_TARGET}</b> · 주 5일이면 알맞게 도착해요</div>
+        ${nt?`<button class="pill accent" id="mapGo" style="--ac:var(--korean);margin-top:12px">${nt.review?"🔁 "+nt.label:"▶ "+nt.label+" 시작하기"}</button>`:""}
+      </div></div>
+    <div class="map-now">
+      <div class="mn-box"><div class="mn-label">✓ 지금까지 배운 것</div>
+        <div class="mn-val">${doneTotal}일 완료 · ${cur>1?(cur-1)+"개 과정 + ":""}${curUnit}단원</div></div>
+      <div class="mn-box now"><div class="mn-label">● 지금 배우는 것</div>
+        <div class="mn-val">${MU[curUnit]}</div>
+        <div class="mn-detail">수학 ${MU[curUnit]} · 국어 ${KU[curUnit]} · 영어 ${EU[curUnit]}</div></div>
+      <div class="mn-box"><div class="mn-label">→ 다음에 배울 것</div>
+        <div class="mn-val">${curUnit<11?MU[curUnit+1]:(cur<3?COURSE_NAMES[cur+1]:"모든 과정 완주! 🎓")}</div></div>
+    </div>
+    <div class="menu-label" style="margin:24px 2px 12px">전체 학습 길 (3단계 · 36단원)</div>
+    ${courseHTML}
+    <p class="hint" style="text-align:center;margin-top:18px">단계 올리기·잠금은 <b>부모님</b> 화면에서 · 매일 <b>문제집</b>에서 4장씩 학습해요</p>`;
+  if(document.getElementById("mapGo")) document.getElementById("mapGo").onclick=()=>{
+    if(nt.review){ const rk=nt.type==="c"?("c"+nt.i):nt.i; REROLL[rk]=(REROLL[rk]||0)+1; }
+    nt.type==="c"?openCustomDay(nt.i):openDay(nt.i); };
+}
+
 /* 🖐 만지며 배우기 — 보기 고르기가 아니라 직접 조작하는 학습 (토도수학 방식) · 수학 6종 */
 function tStage(area,q,inner,say){ area.innerHTML=`<div class="stage"><div class="q-text" style="margin-bottom:8px">${q}</div>${inner}</div>`; if(say)speak(say); }
 function tWin(area,say,key,cb){ speak(say); confetti(); if(key)record(key,true); setTimeout(cb,1500); }
@@ -2702,13 +2848,15 @@ function dayPapers(d){
   return out;
 }
 
-/* ---- 학습 완료·진도 (오늘의 학습 흐름) ---- */
-function isDone(key){ return !!(S.done&&S.done[key]); }
-function markDone(key){ if(!S.done) S.done={}; if(S.done[key]) return false;
-  S.done[key]=todayStr(); S.stars+=5; save(); return true; }
-function taskSeq(){ const seq=[];
-  for(let i=0;i<5;i++) seq.push({key:"c"+i,type:"c",i,label:`맞춤 C${i+1}`,title:CC_TITLE_M[i]});
-  const start=(CHILD_CFG.startDay||1)-1;
+/* ---- 학습 완료·진도 (과정별로 기록 — 학습 지도의 기반) ---- */
+function ckey(key){ return (S.course||1)+":"+key; }
+function isDone(key){ return !!(S.done&&S.done[ckey(key)]); }
+function markDone(key){ if(!S.done) S.done={}; const k=ckey(key); if(S.done[k]) return false;
+  S.done[k]=todayStr(); S.stars+=5; save(); return true; }
+function courseDoneDays(c){ return Object.keys(S.done||{}).filter(k=>k.startsWith(c+":d")).length; }
+function taskSeq(){ const seq=[]; const c=S.course||1;
+  if(c===1) for(let i=0;i<5;i++) seq.push({key:"c"+i,type:"c",i,label:`맞춤 C${i+1}`,title:CC_TITLE_M[i]});
+  const start=(c===1?(CHILD_CFG.startDay||1):1)-1;
   for(let d=start;d<TOTAL_DAYS;d++) seq.push({key:"d"+d,type:"d",i:d,label:`${d+1}일차`,title:MU[Math.floor(d/10)]});
   return seq;
 }
@@ -3065,6 +3213,10 @@ if((S.ver||0) < 4){
   if(CHILD_CFG.courseFixed) S.course=CHILD_CFG.courseFixed;
   S.freeNav = !CHILD_CFG.lockDefault ? true : false;
   S.ver=4;
+}
+if((S.ver||0) < 5){   /* 완료 기록을 과정별 키로 이전(1과정으로 귀속) */
+  const nd={}; Object.entries(S.done||{}).forEach(([k,v])=>{ nd[k.indexOf(":")>-1?k:("1:"+k)]=v; });
+  S.done=nd; S.ver=5;
 }
 if(CHILD_CFG.mathDiff&&!S.diffCustom){ S.diff=CHILD_CFG.mathDiff; }   /* 맞춤 기본 난이도 (부모가 직접 바꾸면 유지) */
 
