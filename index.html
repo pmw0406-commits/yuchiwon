@@ -785,8 +785,9 @@ function renderChallenge(){
   next();
 }
 
-/* ===== Level Test (수준 진단 · 단계당 2문제 검증) ===== */
-const LVL_NAMES=["도전 전","씨앗","새싹","꽃","나무","숲"];
+/* ===== Level Test (수준 진단 · 7단계 · 단계당 2문제 검증) ===== */
+const LVL_NAMES=["도전 전","씨앗","새싹","꽃","나무","숲","큰 나무","별"];
+const LVL_BAND=["","만 4세 기초","만 4세 완성","만 5세 기본","만 5세 상위","취학 전 완성","초1 수준 선행","초1 상위 선행"];
 function ltQ(skill,text,say,choices,lang,rowEmojis,passage){ return {skill,text,say,choices,sayLang:lang,rowEmojis,passage}; }
 
 function ltMath(l){
@@ -812,12 +813,32 @@ function ltMath(l){
     const t=rnd(2,9),o=rnd(1,9),n=t*10+o;
     return ltQ("자릿값",`10이 ${t}개, 1이 ${o}개인 수는?`,`10이 ${t}개, 1이 ${o}개인 수는 무엇일까요?`,
       choiceSet(n,pickWrong(n,[n+10,n-10,n+1,t+o]))); }
-  if(v===0){ const a=rnd(24,49),b=rnd(15,49),s=a+b;
-    return ltQ("두 자리 덧셈",`${a} + ${b} = ?`,`${a} 더하기 ${b}는?`,choiceSet(s,pickWrong(s,[s+1,s-1,s+10,s-10]))); }
-  const arr=[]; while(arr.length<3){ const x=rnd(31,99); if(!arr.includes(x)) arr.push(x); }
-  const mx=Math.max(...arr);
-  return ltQ("수의 크기 비교",`가장 큰 수는 어느 것일까요?`,`${arr.join(", ")} 중에 가장 큰 수는?`,
-    shuffle(arr.map(x=>({show:String(x),ok:x===mx}))));
+  if(l===5){
+    if(v===0){ const t1=rnd(1,4),o1=rnd(0,4),t2=rnd(1,Math.min(4,9-t1)),o2=rnd(0,9-o1),a=t1*10+o1,b=t2*10+o2,s=a+b;
+      return ltQ("두 자리 덧셈",`${a} + ${b} = ?`,`${a} 더하기 ${b}는?`,choiceSet(s,pickWrong(s,[s+1,s-1,s+10,s-10]))); }
+    const arr=[]; while(arr.length<3){ const x=rnd(31,99); if(!arr.includes(x)) arr.push(x); }
+    const mx=Math.max(...arr);
+    return ltQ("수의 크기 비교",`가장 큰 수는 어느 것일까요?`,`${arr.join(", ")} 중에 가장 큰 수는?`,
+      shuffle(arr.map(x=>({show:String(x),ok:x===mx})))); }
+  if(l===6){
+    if(v===0){ const o1=rnd(4,9),o2=rnd(11-o1,9),t1=rnd(1,4),t2=rnd(1,4),a=t1*10+o1,b=t2*10+o2,s=a+b;
+      return ltQ("받아올림 두 자리 덧셈",`${a} + ${b} = ?`,`${a} 더하기 ${b}는?`,choiceSet(s,pickWrong(s,[s+10,s-10,s+1,s-1]))); }
+    const step=pick([2,5,10]),st=rnd(3,30);
+    const seq=[st,st+step,st+2*step,st+3*step];
+    return ltQ("수 규칙 찾기",`${seq[0]}, ${seq[1]}, ${seq[2]}, ⬜ — 다음 수는?`,`규칙을 찾아보세요`,
+      choiceSet(seq[3],pickWrong(seq[3],[seq[3]+1,seq[3]-1,seq[3]+step]))); }
+  const w=rnd(0,2);
+  if(w===0){ const o1=rnd(0,4),o2=rnd(o1+1,9),t1=rnd(3,8),t2=rnd(1,t1-1),a=t1*10+o1,b=t2*10+o2,s=a-b;
+    return ltQ("받아내림 두 자리 뺄셈",`${a} − ${b} = ?`,`${a} 빼기 ${b}는?`,choiceSet(s,pickWrong(s,[s+10,s-10,s+1,s-1]))); }
+  if(w===1){ const g=pick([2,3,4,5]),c=rnd(3,5),s=g*c;
+    return ltQ("묶어 세기 (곱셈 개념)",`${g}씩 ${c}묶음은 모두 몇일까요?`,`${g}씩 ${c}묶음은 모두 몇일까요?`,
+      choiceSet(s,pickWrong(s,[s+g,s-g,s+1]))); }
+  const h=rnd(1,11),m=pick([0,30]);
+  const ans=`${h}시${m?" 30분":""}`;
+  const wrongs=[`${h+1}시${m?" 30분":""}`,`${h}시${m?"":" 30분"}`];
+  return ltQ("시계 읽기",`시계가 가리키는 시각은?`,`시계를 읽어보세요`,
+    shuffle([{show:ans,ok:true},...wrongs.map(x=>({show:x,ok:false}))]),null,null,
+    `<div style="text-align:center">${clockSVG(h,m,true)}</div>`);
 }
 function ltKor(l){
   const v=rnd(0,1);
@@ -840,15 +861,35 @@ function ltKor(l){
   if(l===4){
     if(v===0){ const [ok,no]=pick(SPELL);
       return ltQ("맞춤법","바르게 쓴 낱말은 어느 것일까요?","바르게 쓴 낱말을 찾아보세요",shuffle([{show:ok,ok:true},{show:no,ok:false}])); }
-    const ms=pick(MAKESENT); const scr=ms[0].split(" / "); const wrongSent=scr[1]+" "+scr[2]+" "+scr[0]+".";
+    const ms=pick(MAKESENT); const scr=ms[0].split(" / "); const wrongSent=(scr[1]+" "+scr[2]+" "+scr[0]+".").replace("..",".");
     return ltQ("문장 만들기","바른 문장은 어느 것일까요?","바른 문장을 찾아보세요",
-      shuffle([{show:ms[1],ok:true},{show:wrongSent.replace("..","."),ok:false}])); }
-  if(v===0){ const p=pick(PROVERB);
-    return ltQ("속담",`"${p[0]}" — 이 속담의 뜻은?`,`${p[0]}. 이 속담의 뜻은 무엇일까요?`,
-      shuffle([{show:p[1],ok:true},...sample(PROVERB.filter(x=>x[0]!==p[0]),2).map(x=>({show:x[1],ok:false}))])); }
-  const p=pick(PSG1); const qi=rnd(0,p.q.length-1); const [qq,aa]=p.q[qi];
-  const others=sample(PSG1.filter(x=>x!==p).flatMap(x=>x.q.map(z=>z[1])).filter(x=>x!==aa),2);
-  return ltQ("짧은 글 읽기",qq,`글을 읽고 답해 보세요. ${qq}`,choiceSet(aa,others),null,null,p.t);
+      shuffle([{show:ms[1],ok:true},{show:wrongSent,ok:false}])); }
+  if(l===5){
+    if(v===0){ const p=pick(PROVERB);
+      return ltQ("속담",`"${p[0]}" — 이 속담의 뜻은?`,`${p[0]}. 이 속담의 뜻은 무엇일까요?`,
+        shuffle([{show:p[1],ok:true},...sample(PROVERB.filter(x=>x[0]!==p[0]),2).map(x=>({show:x[1],ok:false}))])); }
+    const p=pick(PSG1); const qi=rnd(0,p.q.length-1); const [qq,aa]=p.q[qi];
+    const others=sample(PSG1.filter(x=>x!==p).flatMap(x=>x.q.map(z=>z[1])).filter(x=>x!==aa),2);
+    return ltQ("짧은 글 읽기",qq,`글을 읽고 답해 보세요. ${qq}`,choiceSet(aa,others),null,null,p.t); }
+  if(l===6){
+    if(v===0){ const p=pick(PSG2); const qi=rnd(0,p.q.length-1); const [qq,aa]=p.q[qi];
+      const others=sample(PSG2.filter(x=>x!==p).flatMap(x=>x.q.map(z=>z[1])).filter(x=>x!==aa),2);
+      return ltQ("긴 글 읽기",qq,`글을 읽고 답해 보세요.`,choiceSet(aa,others),null,null,p.t); }
+    const CONN=[["비가 왔어요. ⬜ 우산을 썼어요.","그래서",["그러나","그리고"]],
+      ["열심히 달렸어요. ⬜ 지각을 했어요.","그러나",["그래서","그리고"]],
+      ["사과를 먹었어요. ⬜ 우유도 마셨어요.","그리고",["그러나","왜냐하면"]]];
+    const c=pick(CONN);
+    return ltQ("이어 주는 말",`"${c[0]}" ⬜에 알맞은 말은?`,`빈칸에 알맞은 이어 주는 말은?`,
+      shuffle([{show:c[1],ok:true},...c[2].map(x=>({show:x,ok:false}))])); }
+  if(v===0){ const p=pick(PSG3); const [qq,aa]=p.q[2];
+    const others=sample(PSG3.filter(x=>x!==p).flatMap(x=>x.q.map(z=>z[1])).filter(x=>x!==aa),2);
+    return ltQ("추론 독해",qq,`글을 읽고 생각해 보세요.`,choiceSet(aa,others),null,null,p.t); }
+  const HON=[["할머니께서 진지를 ⬜.","드세요",["먹어요","드셔"]],
+    ["선생님께 선물을 ⬜.","드려요",["줘요","드세요"]],
+    ["아버지께서 ⬜.","주무세요",["자요","잔다"]]];
+  const h=pick(HON);
+  return ltQ("높임말",`"${h[0]}" ⬜에 알맞은 말은?`,`빈칸에 알맞은 높임말은?`,
+    shuffle([{show:h[1],ok:true},...h[2].map(x=>({show:x,ok:false}))]));
 }
 function ltEng(l){
   const v=(S.sound||l!==2)?rnd(0,1):0;
@@ -878,9 +919,30 @@ function ltEng(l){
     const others=sample(CVC.filter(x=>x[0]!==c[0]),2);
     return ltQ("그림→단어",`그림의 단어는 어느 것일까요?`,c[0],
       shuffle([{show:c[0],ok:true},...others.map(o=>({show:o[0],ok:false}))]),"en-US",[c[1]]); }
-  const SENTS=[["I see a cat.","🐱"],["The dog is big.","🐶"],["I like the sun.","☀️"],["The pig can run.","🐷"]];
-  const s=pick(SENTS), others=sample(SENTS.filter(x=>x[0]!==s[0]),2).map(o=>({show:o[1],ok:false,emoji:true}));
-  return ltQ("문장 이해",`“${s[0]}” — 문장이 말하는 그림은?`,s[0],shuffle([{show:s[1],ok:true,emoji:true},...others]),"en-US");
+  if(l===5){
+    const SENTS=[["I see a cat.","🐱"],["The dog is big.","🐶"],["I like the sun.","☀️"],["The pig can run.","🐷"]];
+    const s=pick(SENTS), others=sample(SENTS.filter(x=>x[0]!==s[0]),2).map(o=>({show:o[1],ok:false,emoji:true}));
+    return ltQ("문장 이해",`“${s[0]}” — 문장이 말하는 그림은?`,s[0],shuffle([{show:s[1],ok:true,emoji:true},...others]),"en-US"); }
+  if(l===6){
+    if(v===0){ const FILL=[["I ⬜ a cat.","see",["sun","sit"]],["The dog ⬜ big.","is",["it","in"]],
+        ["We ⬜ run.","can",["cat","car"]],["I like ⬜ dog.","the",["ten","tap"]]];
+      const f=pick(FILL);
+      return ltQ("사이트 워드",`“${f[0]}” — ⬜에 들어갈 말은?`,f[1],
+        shuffle([{show:f[1],ok:true},...f[2].map(x=>({show:x,ok:false}))]),"en-US"); }
+    const fam=pick(["at","an","ig","op","un"]); const words=FAMS[fam].map(x=>x[0]);
+    const odd=pick(CVC.filter(c=>!c[0].endsWith(fam)))[0];
+    return ltQ("단어 가족",`‘-${fam}’ 가족이 아닌 것은?`,fam,
+      shuffle([{show:odd,ok:true},...sample(words,2).map(x=>({show:x,ok:false}))]),"en-US"); }
+  if(v===0){ const QA=[["What is this? 🐱","It is a cat.",["I am fine.","Good bye."]],
+      ["How are you?","I am fine.",["It is a dog.","I see a sun."]],
+      ["What is this? ☀️","It is the sun.",["I can run.","It is a cup."]]];
+    const q=pick(QA);
+    return ltQ("문답 표현",`“${q[0]}” — 알맞은 대답은?`,q[0],
+      shuffle([{show:q[1],ok:true},...q[2].map(x=>({show:x,ok:false}))]),"en-US"); }
+  const OX=[["The sun is hot.","⭕"],["A cat can fly.","❌"],["The bed is for sleeping.","⭕"],["We eat a hat.","❌"]];
+  const o=pick(OX);
+  return ltQ("문장 판단",`“${o[0]}” — 맞으면 ⭕, 틀리면 ❌`,o[0],
+    shuffle([{show:"⭕",ok:o[1]==="⭕",emoji:true},{show:"❌",ok:o[1]==="❌",emoji:true}]),"en-US");
 }
 function ltOpt(ch){ if(ch.emoji) return `<span class="oe">${ch.show}</span>`;
   const long=String(ch.show).length>6;
@@ -889,10 +951,10 @@ function ltOpt(ch){ if(ch.emoji) return `<span class="oe">${ch.show}</span>`;
 function renderLevel(){
   const prev=S.level?`<p style="font-weight:700;color:var(--ink-2);font-size:13.5px;margin-top:16px">지난 결과 (${S.level.date}) · 수학 Lv${S.level.m} · 국어 Lv${S.level.k} · 영어 Lv${S.level.e} → <b>${S.level.rec}일차</b> 추천</p>`:"";
   secBody.innerHTML=`<div class="lvl-intro"><div class="big">🧭</div><h2>우리 아이 레벨 테스트</h2>
-    <p>수학 · 국어 · 영어를 각 <b>5단계 × 2문제 검증</b>으로 진단해요.<br>
-    두 문제를 연달아 맞혀야 다음 단계로 올라가요 — 찍어서는 통과할 수 없어요.<br>
-    단계마다 유형이 달라져요 (연산·자릿값 / 어휘·독해 / 파닉스·듣기)<br>
-    <b>약 5분 · 과목별 최대 15문제</b></p>
+    <p>수학 · 국어 · 영어를 각 <b>7단계 × 2문제 검증</b>으로 진단해요.<br>
+    만 4세 기초부터 <b>초등 1학년 선행</b>까지 폭넓게 측정하고,<br>
+    끝나면 또래 대비 수준 · 오답 리뷰 · <b>4주 학습 로드맵 리포트</b>가 나와요.<br>
+    <b>약 5~8분</b> · 잘할수록 문제가 많아져요</p>
     <button class="pill accent" id="ltStart" style="--ac:#0F87A8">테스트 시작하기</button>${prev}</div>`;
   document.getElementById("ltStart").onclick=runLT;
 }
@@ -900,9 +962,9 @@ function runLT(){
   const order=[{k:"m",label:"수학",color:"var(--math)",g:ltMath},
                {k:"k",label:"국어",color:"var(--korean)",g:ltKor},
                {k:"e",label:"영어",color:"var(--english)",g:ltEng}];
-  const res={m:0,k:0,e:0}; const missed=[];
+  const res={m:0,k:0,e:0}; const missed=[]; const okSkills=[]; const review=[];
   let si=0,lvl=1,okN=0,ngN=0,qn=0;
-  const TOTALQ=30;
+  const TOTALQ=36;
   secBody.innerHTML=`<div class="stage"><div class="progress"><div class="bar" style="background:#0F87A8"></div></div>
     <div class="pmeta"><span class="lvl-sub"><span class="dot" id="ltDot"></span><span id="ltSub"></span></span></div>
     <div class="qb"></div></div>`;
@@ -913,7 +975,7 @@ function runLT(){
     const sub=order[si]; qn++;
     bar.style.width=(Math.min(qn-1,TOTALQ)/TOTALQ*100)+"%";
     dotEl.style.background=sub.color;
-    subEl.textContent=`${sub.label} · ${lvl}단계 (${okN+ngN+1}번째 문제)`;
+    subEl.textContent=`${sub.label} · ${lvl}단계`;
     const p=sub.g(lvl);
     const row=p.rowEmojis?`<div class="q-row">${p.rowEmojis.map(e=>`<span>${e}</span>`).join("")}</div>`:"";
     const psg=p.passage?`<div class="passage" style="max-width:540px;margin:16px auto 0;text-align:left;font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink)">${p.passage}</div>`:"";
@@ -922,46 +984,97 @@ function runLT(){
     const wrap=qb.querySelector(".q-choices");
     p.choices.forEach(ch=>{ const b=document.createElement("button"); b.className="opt"; b.innerHTML=ltOpt(ch);
       b.onclick=()=>{ [...wrap.children].forEach(x=>x.disabled=true);
-        if(ch.ok){ b.classList.add("right"); confetti(); speak("딩동댕!"); okN++; }
+        if(ch.ok){ b.classList.add("right"); confetti(); speak("딩동댕!"); okN++;
+          okSkills.push(`${sub.label}·${p.skill}`); }
         else { b.classList.add("wrong"); speak("괜찮아요!"); ngN++;
           missed.push(`${sub.label}·${p.skill}`);
+          const correct=p.choices.find(c=>c.ok);
+          review.push({s:sub.label,skill:p.skill,q:p.text.replace(/<[^>]*>/g,"").slice(0,50),a:correct?correct.show:""});
           [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.classList.add("right"); }); }
-        /* 단계 판정: 정답 2 → 승급, 오답 2 → 과목 종료 */
-        if(okN>=2){ res[sub.k]=lvl; lvl++; okN=0; ngN=0; if(lvl>5){ si++; lvl=1; } }
+        if(okN>=2){ res[sub.k]=lvl; lvl++; okN=0; ngN=0; if(lvl>7){ si++; lvl=1; } }
         else if(ngN>=2){ si++; lvl=1; okN=0; ngN=0; }
         setTimeout(ask,1000); };
       wrap.appendChild(b); });
   }
   function finish(){
     bar.style.width="100%";
-    const mm=[1,1,11,21,31,41], kk=[1,1,11,21,31,41], ee=[1,1,11,31,51,61];
+    const mm=[1,1,11,21,31,41,51,71], kk=[1,1,11,21,31,41,61,81], ee=[1,1,11,31,51,61,71,91];
     const per={m:mm[res.m],k:kk[res.k],e:ee[res.e]};
     const rec=Math.min(per.m,per.k,per.e);
-    const missU=[...new Set(missed)].slice(0,6);
-    S.level={m:res.m,k:res.k,e:res.e,rec,per,miss:missU,date:todayStr()}; save();
+    const missU=[...new Set(missed)].slice(0,8);
+    const okU=[...new Set(okSkills)];
+    S.level={m:res.m,k:res.k,e:res.e,rec,per,miss:missU,review:review.slice(0,8),date:todayStr()}; save();
     bigConfetti(); speak(`테스트 끝! ${S.name?callName(S.name)+", ":""}정말 잘했어요!`);
     const rows=order.map(sub=>{ const v=res[sub.k];
       return `<div class="lvl-row"><span class="ln">${sub.label}</span>
-        <span class="lb"><div style="width:${v/5*100}%;background:${sub.color}"></div></span>
-        <span class="lv">Lv${v} · ${LVL_NAMES[v]} <small style="color:var(--ink-3);font-weight:700">(${per[sub.k]}일차 수준)</small></span></div>`; }).join("");
+        <span class="lb"><div style="width:${v/7*100}%;background:${sub.color}"></div></span>
+        <span class="lv">Lv${v} · ${LVL_NAMES[v]}<br><small style="color:var(--ink-3);font-weight:700">${LVL_BAND[v]} · ${per[sub.k]}일차 수준</small></span></div>`; }).join("");
     const missHTML=missU.length?`<div style="margin-top:14px;text-align:center">
       <div style="font-size:12.5px;font-weight:800;color:var(--ink-3);letter-spacing:1px;margin-bottom:8px">보충이 필요한 유형</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${missU.map(m=>
         `<span style="font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--no) 35%, var(--line));color:var(--no);background:color-mix(in srgb,var(--no) 6%, var(--surface))">${m}</span>`).join("")}</div></div>`:"";
+    const reviewHTML=review.length?`<div class="panelbox" style="margin-top:16px"><h3>📋 오답 리뷰</h3>
+      ${review.slice(0,8).map(r=>`<div style="font-size:13.5px;font-weight:600;padding:7px 0;border-bottom:1px dashed var(--line)">
+        <span style="font-weight:800;color:var(--no)">[${r.s}·${r.skill}]</span> ${r.q} → <b style="color:var(--ok)">${r.a}</b></div>`).join("")}</div>`:"";
     secBody.innerHTML=`<div class="lvl-res">
       <div class="lvl-intro" style="margin-bottom:16px"><div class="big">🎉</div><h2>${S.name?callName(S.name)+"의 ":""}진단 결과</h2></div>
       ${rows}
       <div class="lvl-reco">문제집은 <b>${rec}일차</b>부터 시작하는 것을 추천해요!<br>
-        <span style="font-size:13px;color:var(--ink-2)">하루 3장이 함께 가도록 가장 기초가 필요한 과목(${rec===per.m?"수학":rec===per.k?"국어":"영어"})에 맞췄어요.
-        앞선 과목은 해당 페이지를 복습으로 가볍게 활용하세요.</span></div>
-      ${missHTML}
+        <span style="font-size:13px;color:var(--ink-2)">하루 3장이 함께 가도록 가장 기초가 필요한 과목(${rec===per.m?"수학":rec===per.k?"국어":"영어"})에 맞췄어요.</span></div>
+      ${missHTML}${reviewHTML}
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px">
+        <button class="pill accent" id="ltReport" style="--ac:var(--parent)">🖨 진단 리포트 인쇄</button>
         <button class="pill accent" id="ltGo" style="--ac:var(--book)">📄 ${rec}일차 학습지 열기</button>
         <button class="pill" id="ltRetry">다시 테스트</button></div></div>`;
     document.getElementById("ltGo").onclick=()=>openDay(rec-1);
     document.getElementById("ltRetry").onclick=renderLevel;
+    document.getElementById("ltReport").onclick=()=>{
+      document.body.classList.add("print-ws");
+      document.getElementById("printMount").innerHTML=ltReportHTML(res,per,rec,missU,okU,review);
+      window.print(); };
   }
   ask();
+}
+function ltComment(v){
+  if(v<=2) return "기초 개념부터 차근차근 다지는 시기예요. 매일 짧게, 재미있게 반복하면 금방 자랍니다.";
+  if(v<=4) return "또래 평균 이상이에요. 현재 단계를 촘촘히 다지면 상위권 진입이 충분히 가능해요.";
+  if(v===5) return "취학 준비가 완성 단계예요. 다양한 유형으로 폭을 넓혀 주세요.";
+  return "초등 과정을 선행 중이에요. 진도보다 사고력·서술형 확장에 무게를 두는 것을 추천해요.";
+}
+function ltReportHTML(res,per,rec,missU,okU,review){
+  const subs=[["수학","m","var(--math)",MU],["국어","k","var(--korean)",KU],["영어","e","var(--english)",EU]];
+  const bars=subs.map(([lab,k,c])=>{ const v=res[k];
+    return `<div style="display:flex;align-items:center;gap:12px;margin:9px 0">
+      <b style="min-width:44px;font-size:14px">${lab}</b>
+      <span style="flex:1;height:12px;background:#F0EDE6;border-radius:99px;overflow:hidden"><span style="display:block;height:100%;width:${v/7*100}%;background:${c};border-radius:99px"></span></span>
+      <span style="font-size:13px;font-weight:800;min-width:150px">Lv${v}/7 · ${LVL_BAND[v]}</span></div>`; }).join("");
+  const comments=subs.map(([lab,k])=>`<div class="kitem" style="margin:7px 0"><b>${lab}</b> — ${ltComment(res[k])}</div>`).join("");
+  const okChips=okU.slice(0,8).map(m=>`<span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;border:1.3px solid #BFE0CC;color:#1F7A4D;background:#F1F9F4;display:inline-block;margin:2px">${m}</span>`).join("");
+  const missChips=missU.map(m=>`<span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;border:1.3px solid #EBC4CC;color:#B03A52;background:#FBF2F4;display:inline-block;margin:2px">${m}</span>`).join("");
+  const weeks=[0,1,2,3].map(i=>{ const d0=Math.min(96,rec+i*5), d1=Math.min(100,d0+4), u=Math.floor((d0-1)/10);
+    return `<tr><td style="padding:7px 10px;border:1px solid #E8E3D8;font-weight:800">${i+1}주차</td>
+      <td style="padding:7px 10px;border:1px solid #E8E3D8">${d0}~${d1}일차</td>
+      <td style="padding:7px 10px;border:1px solid #E8E3D8">${MU[u]}</td>
+      <td style="padding:7px 10px;border:1px solid #E8E3D8">${KU[u]}</td>
+      <td style="padding:7px 10px;border:1px solid #E8E3D8">${EU[u]}</td></tr>`; }).join("");
+  const reviewRows=review.slice(0,8).map(r=>`<div class="kitem" style="margin:6px 0;font-size:13px">
+    <b style="color:#B03A52">[${r.s}·${r.skill}]</b> ${r.q} → 정답: <b>${r.a}</b></div>`).join("");
+  return `<div class="paper" style="--sc:var(--parent)">
+    <div class="phead"><div class="pday" style="background:var(--parent)"><b>진단</b><span>리포트</span></div>
+      <div class="pt"><div class="pk" style="color:var(--parent)">LEVEL TEST REPORT · ${todayStr()}</div>
+        <div class="pu">${S.name||"우리 아이"} 학습 수준 진단 결과</div></div>
+      <div class="pm">우리집 유치원<br>100일 학습 프로그램</div></div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">1</span>수준 프로파일 (7단계)</div>${bars}</div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">2</span>과목별 해석</div>${comments}</div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">3</span>강점과 보충 포인트</div>
+      <div style="font-size:12.5px;font-weight:800;color:#1F7A4D;margin:6px 0 3px">잘하는 유형</div><div>${okChips||"—"}</div>
+      <div style="font-size:12.5px;font-weight:800;color:#B03A52;margin:10px 0 3px">보충이 필요한 유형</div><div>${missChips||"— 없음, 골고루 우수해요"}</div></div>
+    ${review.length?`<div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">4</span>오답 리뷰</div>${reviewRows}</div>`:""}
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">${review.length?5:4}</span>추천 4주 학습 로드맵 — ${rec}일차부터 (주 5일)</div>
+      <table style="border-collapse:collapse;width:100%;font-size:13px;margin-top:6px">
+        <tr style="background:#F7F4EE"><th style="padding:7px 10px;border:1px solid #E8E3D8">주차</th><th style="padding:7px 10px;border:1px solid #E8E3D8">진도</th><th style="padding:7px 10px;border:1px solid #E8E3D8">수학</th><th style="padding:7px 10px;border:1px solid #E8E3D8">국어</th><th style="padding:7px 10px;border:1px solid #E8E3D8">영어</th></tr>${weeks}</table></div>
+    <div class="pfoot"><span>상담 메모 <span class="uline" style="min-width:180px"></span></span>
+      <span class="mark">우리집 유치원 · 레벨 테스트 리포트</span></div></div>`;
 }
 /* ===== Sticker board ===== */
 const STICKERS=["🦄","🐬","🦁","🚀","🌈","🐼","🦖","🎠","🐳","🦋","🍭","🎪","🐧","🌟","🦩","🎨","🐢","🎁","🦉","⚡","🧸","🎯","👑","🏆"];
