@@ -483,7 +483,7 @@ async function supaFetch(path,opt={}){
 }
 function mergeState(r){
   if(!r) return;
-  if((r.ts||0)>(S.ts||0)) ["name","diff","sound","level","fam"].forEach(k=>{ if(r[k]!==undefined&&r[k]!=="") S[k]=r[k]; });
+  if((r.ts||0)>(S.ts||0)) ["name","diff","sound","level","fam"].forEach(k=>{ if(r[k]!=null&&r[k]!=="") S[k]=r[k]; });
   S.stars=Math.max(S.stars||0,r.stars||0);
   const days=Object.assign({},r.days||{});
   Object.entries(S.days||{}).forEach(([k,v])=>{ days[k]=Math.max(days[k]||0,v); }); S.days=days;
@@ -740,6 +740,7 @@ function makeQuizArea(area,key,lang){
           speak("잘했어요!"); confetti(); [...wrap.children].forEach(x=>x.disabled=true); setTimeout(next,1150); }
         else { if(first) record(key,false); first=false; b.classList.add("wrong"); b.disabled=true; speak("다시 해볼까?"); } };
       wrap.appendChild(b); });
+    if(window.__LT_DEBUG) [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.dataset.ok="1"; });
   } next();
 }
 
@@ -789,6 +790,7 @@ function renderChallenge(){
           [...wrap.children].forEach(x=>x.disabled=true); idx++; setTimeout(next,1100); }
         else { if(first) record(G.k,false); first=false; b.classList.add("wrong"); b.disabled=true; speak("다시!"); } };
       wrap.appendChild(b); });
+    if(window.__LT_DEBUG) [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.dataset.ok="1"; });
   }
   function finish(){ bar.style.width="100%"; pn.textContent=TOTAL;
     const nm=S.name?callName(S.name)+", ":"";
@@ -809,7 +811,7 @@ const LT_SENT=[["학교에 / 나는 / 갑니다","나는 학교에 갑니다."],
   ["하늘에 / 새가 / 날아요","새가 하늘에 날아요."],["책을 / 나는 / 읽어요","나는 책을 읽어요."],
   ["그림을 / 동생이 / 그려요","동생이 그림을 그려요."]];
 const LVL_NAMES=["도전 전","씨앗","새싹","꽃","나무","숲","큰 나무","별"];
-const LVL_BAND=["","만 4세 기초","만 4세 완성","만 5세 기본","만 5세 상위","취학 전 완성","초1 수준 선행","초1 상위 선행"];
+const LVL_BAND=["","만 4세 수준","누리과정 완성 (만 5세 국가 표준)","만 5세 상위 · 선행 시작","만 5세 최상위","취학 준비 완성","초1 1학기 수준 선행","초1 2학기+ 수준 선행"];
 function ltQ(skill,text,say,choices,lang,rowEmojis,passage){ return {skill,text,say,choices,sayLang:lang,rowEmojis,passage}; }
 
 function ltMath(l){
@@ -1215,9 +1217,9 @@ function ltReportHTML(res,per,rec,missU,okU,review,trajS,qlog){
         <div style="font-size:26px;font-weight:800;color:var(--parent);line-height:1.1">${gl}</div>
         <div style="font-size:10.5px;font-weight:700">${gd}</div></div></div>
     <div class="ws-guide"><div class="gt">검사 개요</div>
-      <ul><li>적응형 계단식 검사(성인 시력검사와 동일한 원리): 정답 시 상승·오답 시 하강하며 수렴 지점을 측정</li>
+      <ul><li>적응형 계단식 검사(CAT·시력검사와 동일 원리): 정답 시 상승·오답 시 하강하며 수렴 지점을 측정 — 같은 정밀도를 훨씬 적은 문항으로 얻는 검증된 방식입니다</li>
       <li>과목당 8문항 · 총 ${qlog.length}문항 · 같은 단계 2회 이상 정답 시에만 해당 단계 인정(요행 배제)</li>
-      <li>측정 범위: 1단계(만 4세 기초) ~ 7단계(초등 1학년 상위 선행)</li></ul></div>
+      <li>측정 범위: 1단계(만 4세) ~ 7단계(초1 2학기+ 선행) · 참고: 국가 누리과정(만 5세)은 ‘20까지의 수 감각’까지만 다루므로 <b>3단계 이상은 이미 선행 영역</b>입니다</li></ul></div>
     <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">1</span>수준 프로파일과 측정 궤적</div>${bars}${trajRow}</div>
     <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">2</span>전체 문항 기록 (${qlog.length}문항)</div>
       <table style="border-collapse:collapse;width:100%;font-size:11.5px;margin-top:4px">
