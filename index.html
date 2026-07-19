@@ -4,6 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>우리집 유치원</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#D6455D" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="우리집 유치원" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 <style>
   :root{
@@ -355,6 +362,17 @@
     color:#C0392B; font-size:12px; font-weight:800; line-height:1.18; display:grid; place-items:center;
     transform:translateX(-50%) rotate(-9deg); letter-spacing:.5px; background:color-mix(in srgb,#C0392B 6%, transparent); }
 
+  /* ---------- 앱 설치 배너 ---------- */
+  .install-card{ display:flex; align-items:center; gap:14px; background:
+      linear-gradient(120deg, color-mix(in srgb,var(--korean) 10%, var(--surface)), var(--surface) 62%);
+    border:1px solid color-mix(in srgb,var(--korean) 28%, var(--line)); border-radius:20px; padding:14px 18px; margin-bottom:20px; box-shadow:var(--sh-s); }
+  .install-card .ic{ font-size:34px; flex:none; }
+  .install-card .txt{ flex:1; min-width:0; }
+  .install-card .txt b{ font-size:15.5px; font-weight:800; }
+  .install-card .txt p{ margin:2px 0 0; font-size:12.5px; font-weight:600; color:var(--ink-2); line-height:1.5; }
+  .install-card .btns{ display:flex; gap:8px; flex-none; }
+  .install-x{ font-family:inherit; border:none; background:none; color:var(--ink-3); font-size:20px; cursor:pointer; padding:0 4px; }
+
   /* ---------- 마스코트(성장 친구) ---------- */
   .pet-card{ display:flex; align-items:center; gap:18px; background:
       linear-gradient(120deg, color-mix(in srgb,var(--think) 8%, var(--surface)), var(--surface) 60%);
@@ -666,6 +684,7 @@
         </div>
       </div>
     </div>
+    <div id="installMount"></div>
     <div id="petMount"></div>
     <div id="setupMount"></div>
     <div id="todayTask"></div>
@@ -861,8 +880,32 @@ function refreshHero(){
   const s1=document.getElementById("stStreak"); if(s1) s1.textContent=streak();
   const s2=document.getElementById("stStars"); if(s2) s2.textContent=S.stars;
   const s3=document.getElementById("stStickers"); if(s3) s3.textContent=Math.min(24,Math.floor(S.stars/10));
+  renderInstall();
   renderPet();
   renderTodayTask();
+}
+/* ===== 앱 설치(PWA) ===== */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",(e)=>{ e.preventDefault(); deferredPrompt=e; renderInstall(); });
+window.addEventListener("appinstalled",()=>{ deferredPrompt=null; S.installed=true; save(false); renderInstall(); });
+function isStandalone(){ return window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches
+  || window.navigator.standalone===true; }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function renderInstall(){
+  const m=document.getElementById("installMount"); if(!m) return;
+  if(isStandalone()||S.installHidden){ m.innerHTML=""; return; }
+  const ios=isIOS();
+  if(!deferredPrompt && !ios){ m.innerHTML=""; return; }   /* 설치 불가 환경이면 숨김 */
+  m.innerHTML=`<div class="install-card">
+    <div class="ic">📲</div>
+    <div class="txt"><b>홈 화면에 앱으로 설치하기</b>
+      <p>${ios?"공유 버튼 <b>􀈂</b> → ‘홈 화면에 추가’를 누르면 앱처럼 전체화면으로 열려요. 인터넷 없이도 학습돼요.":"한 번 설치하면 앱 아이콘으로 바로 열리고, 인터넷 없이도 학습할 수 있어요."}</p></div>
+    <div class="btns">${ios?"":`<button class="pill accent" id="instGo" style="--ac:var(--korean)">설치</button>`}
+      <button class="install-x" id="instX" title="닫기">×</button></div></div>`;
+  const g=document.getElementById("instGo");
+  if(g) g.onclick=async()=>{ if(!deferredPrompt)return; deferredPrompt.prompt();
+    try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; renderInstall(); };
+  document.getElementById("instX").onclick=()=>{ S.installHidden=true; save(false); renderInstall(); };
 }
 /* ===== 마스코트(성장하는 학습 친구) ===== */
 const PET_STAGES=[
@@ -2319,6 +2362,12 @@ function renderParent(){
              <input type="text" id="famIn" placeholder="코드 입력" maxlength="6" style="width:110px;text-transform:uppercase;letter-spacing:2px" />
              <button class="pill" id="famJoin">연결</button></div>`}
     </div>
+    <div class="panelbox"><h3>💾 데이터 백업 · 복원</h3>
+      <p style="font-size:13.5px;color:var(--ink-2);font-weight:600;margin:0 0 12px">모든 학습 기록(별·스티커·배지·정답률·레벨)을 파일로 저장해 두면, 기기를 바꾸거나 실수로 지워도 되돌릴 수 있어요.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pill accent" id="bkExport" style="--ac:var(--parent)">⬇️ 백업 파일 내보내기</button>
+        <button class="pill" id="bkImportBtn">⬆️ 백업 파일 불러오기</button>
+        <input type="file" id="bkImport" accept="application/json,.json" style="display:none" /></div></div>
     <div class="panelbox"><h3>🗑 기록 관리</h3>
       <p style="font-size:14px;color:var(--ink-soft);font-weight:600;margin:0 0 12px">별·스티커·정답률 기록을 모두 지우고 처음부터 시작합니다.</p>
       <button class="pill danger" id="resetBtn">기록 모두 지우기</button></div>
@@ -2336,6 +2385,26 @@ function renderParent(){
     const rp=document.getElementById("ppReport"); if(rp) rp.onclick=()=>doPrint(reportCard(n.getFullYear(),n.getMonth()));
     const rv=document.getElementById("ppReview"); if(rv) rv.onclick=()=>doPrint(reviewSheet());
     const cc=document.getElementById("ppCert"); if(cc) cc.onclick=()=>doPrint(certPaper()); }
+  { const ex=document.getElementById("bkExport");
+    if(ex) ex.onclick=()=>{ try{
+      const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+      const url=URL.createObjectURL(blob); const a=document.createElement("a");
+      const d=new Date(), ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      a.href=url; a.download=`우리집유치원-백업-${(S.name||"기록")}-${ds}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(e){ alert("내보내기에 실패했어요."); } };
+    const ib=document.getElementById("bkImportBtn"), inp=document.getElementById("bkImport");
+    if(ib&&inp){ ib.onclick=()=>inp.click();
+      inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f)return;
+        const rd=new FileReader();
+        rd.onload=()=>{ try{ const data=JSON.parse(rd.result);
+          if(typeof data!=="object"||data===null||!("stars" in data||"days" in data||"done" in data))
+            throw new Error("형식 오류");
+          if(!confirm("이 백업 파일의 기록으로 되돌릴까요?\n현재 기기의 기록은 백업 내용으로 대체됩니다.")) { inp.value=""; return; }
+          S=Object.assign({}, DEFAULTS, data); save();
+          alert("복원했어요! 화면을 새로고침합니다."); location.reload();
+        }catch(e){ alert("올바른 백업 파일이 아니에요. 다시 확인해 주세요."); inp.value=""; } };
+        rd.readAsText(f); }; } }
   document.getElementById("saveName").onclick=()=>{ S.name=document.getElementById("setName").value.trim(); save(); refreshHero(); renderSetup(); };
   const dseg=document.getElementById("diffSeg");
   const paint=()=>{ [...dseg.children].forEach(b=>b.classList.toggle("on",b.dataset.d===S.diff));
@@ -3864,6 +3933,11 @@ if(CHILD_CFG.mathDiff&&!S.diffCustom){ S.diff=CHILD_CFG.mathDiff; }   /* 맞춤 
 route();
 if(supaOK()&&!S.fam){ S.fam=genFamCode(); save(); } else save();   /* 첫 실행 시 가족 코드 자동 생성 → 자동 동기화 */
 syncPull().then(ok=>{ if(ok){ refreshHero(); renderSetup(); } });
+
+/* ===== 서비스 워커 등록 (오프라인 지원) — http(s)에서만 ===== */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+}
 </script>
 </body>
 </html>
