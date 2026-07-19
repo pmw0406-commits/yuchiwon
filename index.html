@@ -142,6 +142,16 @@
     padding:16px 18px; box-shadow:var(--sh-s); max-width:200px; }
   .touch-pile.pop{ border-color:var(--ok); background:color-mix(in srgb,var(--ok) 12%, var(--surface)); }
 
+  /* ---------- 창의·미술 ---------- */
+  .art-wrap{ max-width:520px; margin:0 auto; text-align:center; }
+  .art-card{ background:var(--surface); border:1px solid var(--line); border-radius:26px; padding:30px 24px;
+    box-shadow:var(--sh-m); }
+  .art-kind{ font-size:12.5px; font-weight:800; letter-spacing:1.5px; color:#C65BA8; }
+  .art-emoji{ font-size:96px; line-height:1.1; margin:6px 0; }
+  .art-title{ font-size:26px; font-weight:800; letter-spacing:-.6px; }
+  .art-tip{ font-size:15px; font-weight:600; color:var(--ink-2); margin-top:10px; line-height:1.6; }
+  .art-btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+
   /* ---------- 이야기 읽기 ---------- */
   .read-wrap{ max-width:660px; margin:0 auto; }
   .read-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
@@ -215,6 +225,20 @@
   .sec-title .sic{ width:38px; height:38px; border-radius:12px; display:grid; place-items:center;
     background:color-mix(in srgb, var(--tc) 11%, var(--surface)); color:var(--tc); }
   .sec-title .sic svg{ width:20px; height:20px; }
+
+  .secstat{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--surface);
+    border:1px solid var(--line); border-radius:14px; padding:9px 15px; margin-bottom:16px; box-shadow:var(--sh-s);
+    font-size:13px; font-weight:700; color:var(--ink-2); }
+  .secstat .ss-course{ font-weight:800; color:var(--ink); }
+  .secstat .ss-badge{ background:color-mix(in srgb,var(--think) 14%, var(--surface)); color:var(--think);
+    font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:999px; }
+  .secstat .ss-unit b{ color:var(--math); }
+  .secstat .ss-sep{ color:var(--ink-3); }
+  .secstat .ss-today{ font-weight:800; }
+  .secstat .ss-map{ margin-left:auto; border:1px solid var(--line); background:var(--bg); color:var(--ink);
+    font-family:inherit; font-weight:800; font-size:12.5px; padding:6px 12px; border-radius:999px; cursor:pointer; }
+  .secstat .ss-map:hover{ background:var(--surface); }
+  @media(max-width:560px){ .secstat .ss-prog{ display:none; } .secstat .ss-map{ margin-left:0; } }
 
   .modes{ display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px; }
   .mode-btn{ border:1px solid var(--line); cursor:pointer; font-weight:700; font-size:15px;
@@ -540,6 +564,7 @@
       <button class="pill" id="backBtn">← 집으로</button>
       <div class="sec-title" id="secTitle"></div>
     </div>
+    <div id="secStatus"></div>
     <div id="secBody"></div>
   </section>
 
@@ -669,6 +694,7 @@ const IC={
   math:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h6M8 5v6"/><path d="M13 17h6"/><path d="M5 17l4-4M9 17l-4-4"/><path d="M13 7h6"/></svg>',
   english:'<svg viewBox="0 0 24 24" fill="none"><text x="12" y="17" text-anchor="middle" font-size="14" font-weight="800" fill="currentColor" font-family="inherit">Aa</text></svg>',
   think:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6.5 6.5 0 0 0-4.3 11.4c.8.7 1.3 1.6 1.3 2.6h6c0-1 .5-1.9 1.3-2.6A6.5 6.5 0 0 0 12 3z"/><path d="M9.5 20h5"/></svg>',
+  art:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16.5" cy="11.5" r="1"/></svg>',
   challenge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 5H4.5a2.8 2.8 0 0 0 2.9 3.6M17 5h2.5a2.8 2.8 0 0 1-2.9 3.6"/><path d="M12 13v3.5"/><path d="M8.5 20h7M10 16.5h4c.7 0 1.5 1 1.5 3.5h-7c0-2.5.8-3.5 1.5-3.5z"/></svg>',
   sticker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9z"/></svg>',
   book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3"/><path d="M9 10h6M9 13.5h6M9 17h3.5"/></svg>',
@@ -681,6 +707,7 @@ const MENU=[
   {id:"math",     grp:"오늘의 학습", title:"수학",     en:"Math",     desc:"수 세기부터 차근차근 (지금은 기초)", ac:"var(--math)"},
   {id:"english",  grp:"오늘의 학습", title:"영어",     en:"English",  desc:"알파벳 음가와 첫 단어 익히기",       ac:"var(--english)"},
   {id:"think",    grp:"오늘의 학습", title:"사고력",   en:"Logic",    desc:"규칙 찾기 · 수 비교 · 순서 추론",    ac:"var(--think)"},
+  {id:"art",      grp:"오늘의 학습", title:"창의·미술", en:"Art",      desc:"그리기 · 만들기 · 상상 놀이",       ac:"#C65BA8"},
   {id:"challenge",grp:"도전과 보상", title:"도전 퀴즈", en:"Challenge",desc:"약한 유형을 골라 내는 10문제 실전",  ac:"var(--quiz)"},
   {id:"level",    grp:"도전과 보상", title:"레벨 테스트", en:"Level Test",desc:"수준 진단 후 맞춤 시작점 추천",   ac:"#0F87A8"},
   {id:"sticker",  grp:"도전과 보상", title:"스티커판", en:"Reward",   desc:"별을 모아 완성하는 나만의 컬렉션",   ac:"var(--sticker)"},
@@ -880,11 +907,30 @@ const SECTIONS={}; MENU.forEach(m=>SECTIONS[m.id]=m);
 function show(el){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); el.classList.add("active"); scrollTo(0,0); }
 backBtn.onclick=()=>{ location.hash="home"; };
 function openSection(m){ if(location.hash==="#sec/"+m.id) route(); else location.hash="sec/"+m.id; }
+const COURSE_EMOJI=["","🌱","🌿","🍎"];
+function statusStrip(){
+  const c=S.course||1, u=Math.floor(courseDoneDays(c)/10), today=S.days[todayStr()]||0;
+  const totalDone=courseDoneDays(1)+courseDoneDays(2)+courseDoneDays(3);
+  return `<div class="secstat">
+    <span class="ss-course">${COURSE_EMOJI[c]} ${COURSE_NAMES[c]}</span>
+    <span class="ss-badge">3단계 중 ${c}단계</span>
+    <span class="ss-sep">·</span>
+    <span class="ss-unit">${u+1}/12단원 진행 중</span>
+    <span class="ss-sep">·</span>
+    <span class="ss-prog">전체 ${totalDone}/360일</span>
+    <span class="ss-today">오늘 ⭐${today}</span>
+    <button class="ss-map" id="ssMap">🗺️ 학습 지도</button></div>`;
+}
+const STATUS_SECTIONS=["korean","math","english","think","art","book"];
 function renderSection(m){
   ACCENT=m.ac;
   secTitle.innerHTML=`<span class="sic" style="--tc:${m.ac}">${IC[m.id]}</span>${m.title}`;
+  const ss=document.getElementById("secStatus");
+  if(STATUS_SECTIONS.includes(m.id)){ ss.innerHTML=statusStrip(); ss.style.display="";
+    const b=document.getElementById("ssMap"); if(b) b.onclick=()=>{ location.hash="sec/map"; }; }
+  else { ss.innerHTML=""; ss.style.display="none"; }
   secBody.innerHTML="";
-  ({korean:renderKorean,math:renderMath,english:renderEnglish,think:renderThink,
+  ({korean:renderKorean,math:renderMath,english:renderEnglish,think:renderThink,art:renderArt,
     challenge:renderChallenge,level:renderLevel,sticker:renderSticker,map:renderMap,book:renderBook,parent:renderParent})[m.id]();
   show(secEl);
 }
@@ -1176,6 +1222,78 @@ function renderThink(){ modeTabs([{label:"규칙 찾기",build:a=>makeQuizArea(a
   {label:"다른 것 찾기",build:a=>makeQuizArea(a,"odd")},{label:"다음은 뭘까",build:a=>makeQuizArea(a,"next")},
   {label:"큰 수·작은 수",build:a=>makeQuizArea(a,"compare")},{label:"몇 번째",build:a=>makeQuizArea(a,"ordinal")}]); }
 function renderEnglish(){ modeTabs([{label:"알파벳 ABC",build:a=>renderFlash(a,ALPHABET,"en-US")},{label:"첫 단어",build:a=>renderFlash(a,CVC,"en-US")}]); }
+
+/* ===== 🎨 창의·미술 — 그리기·만들기·상상 놀이 ===== */
+const ART=[
+ {k:"그리기",e:"🌈",t:"무지개를 그려요",tip:"빨주노초파남보! 좋아하는 순서로 칠해도 좋아요."},
+ {k:"그리기",e:"👨‍👩‍👧",t:"우리 가족을 그려요",tip:"가족을 한 명씩 그리고 이름을 적어 봐요."},
+ {k:"그리기",e:"🐙",t:"바닷속 친구들",tip:"문어·물고기·불가사리… 바다에 뭐가 살까요?"},
+ {k:"그리기",e:"🚀",t:"우주로 가는 로켓",tip:"별과 행성도 함께 그려 봐요!"},
+ {k:"그리기",e:"🦖",t:"내가 좋아하는 공룡",tip:"어떤 색 공룡일까요? 마음대로 칠해요."},
+ {k:"그리기",e:"🏰",t:"나만의 멋진 성",tip:"성에 누가 살고 있을지 상상해 봐요."},
+ {k:"그리기",e:"🌸",t:"봄의 꽃밭",tip:"나비와 벌도 날아오게 그려 봐요."},
+ {k:"그리기",e:"⛄",t:"눈사람 가족",tip:"모자·목도리·단추로 꾸며 줘요."},
+ {k:"그리기",e:"🍕",t:"제일 좋아하는 음식",tip:"군침 도는 음식을 크게 그려 봐요."},
+ {k:"그리기",e:"🐲",t:"상상 속 괴물 친구",tip:"눈이 몇 개? 다리는 몇 개? 마음대로!"},
+ {k:"그리기",e:"🚗",t:"타고 싶은 자동차",tip:"하늘을 나는 차? 물에서 가는 차?"},
+ {k:"그리기",e:"🎂",t:"내 생일 케이크",tip:"초를 몇 개 꽂을까요? 세어 봐요."},
+ {k:"만들기",e:"🦋",t:"색종이 나비 접기",tip:"색종이를 반 접었다 펴서 날개를 만들어요."},
+ {k:"만들기",e:"🤖",t:"휴지심으로 로봇",tip:"다 쓴 휴지심에 눈·팔을 붙여 봐요."},
+ {k:"만들기",e:"🍎",t:"점토로 과일 만들기",tip:"동그랗게 굴려 사과·포도를 만들어요."},
+ {k:"만들기",e:"👑",t:"종이 왕관 만들기",tip:"길게 자른 종이에 보석을 그려 붙여요."},
+ {k:"만들기",e:"🎭",t:"종이접시 가면",tip:"눈 구멍을 뚫고 얼굴을 꾸며요."},
+ {k:"만들기",e:"🏠",t:"상자로 우리 집",tip:"작은 상자에 문과 창문을 그려요."},
+ {k:"만들기",e:"🌟",t:"반짝이 별 모빌",tip:"별을 오려 실에 매달아 봐요."},
+ {k:"만들기",e:"🐛",t:"솔방울 애벌레",tip:"솔방울에 눈알을 붙이면 애벌레!"},
+ {k:"상상",e:"⭕",t:"동그라미로 무엇을 만들까?",tip:"동그라미에 그림을 더해 봐요. 해? 공? 얼굴?"},
+ {k:"상상",e:"✋",t:"손을 대고 그리면?",tip:"종이에 손을 대고 따라 그려요. 무엇이 될까?"},
+ {k:"상상",e:"💭",t:"내가 발명하고 싶은 것",tip:"세상에 없는 신기한 물건을 그려 봐요."},
+ {k:"상상",e:"🌍",t:"내 꿈속 세상",tip:"사탕 나라? 구름 위 집? 상상해 그려요."},
+ {k:"상상",e:"🎨",t:"오늘 기분을 색으로",tip:"오늘 기분은 무슨 색? 그 색으로 칠해 봐요."},
+ {k:"상상",e:"👣",t:"발자국은 누구 걸까?",tip:"발자국을 그리고 누가 지나갔을지 상상해요."}
+];
+let artIdx=0;
+function renderArt(area){
+  area=area||secBody;
+  function show(){
+    const a=ART[artIdx%ART.length];
+    area.innerHTML=`<div class="art-wrap">
+      <div class="art-card">
+        <div class="art-kind">${a.k==="그리기"?"🖍️ 그리기":a.k==="만들기"?"✂️ 만들기":"💭 상상 놀이"}</div>
+        <div class="art-emoji">${a.e}</div>
+        <div class="art-title">${a.t}</div>
+        <div class="art-tip">💡 ${a.tip}</div>
+      </div>
+      <div class="art-btns">
+        <button class="pill" id="artPrev">← 이전</button>
+        <button class="pill" id="artSpeak">🔊 다시 듣기</button>
+        <button class="pill accent" id="artNext" style="--ac:#C65BA8">다른 주제 →</button>
+      </div>
+      <button class="pill" id="artPrint" style="margin-top:12px">🖨️ 그림 그릴 종이 인쇄</button>
+      <p class="hint">종이에 마음껏 그리고 만들어요. 잘 그리는 것보다 <b>즐기는 것</b>이 최고예요!</p></div>`;
+    speak(a.t+". "+a.tip);
+    area.querySelector("#artNext").onclick=()=>{ artIdx++; show(); };
+    area.querySelector("#artPrev").onclick=()=>{ artIdx=(artIdx-1+ART.length)%ART.length; show(); };
+    area.querySelector("#artSpeak").onclick=()=>speak(a.t+". "+a.tip);
+    area.querySelector("#artPrint").onclick=()=>{
+      const html=`<div class="paper" style="--sc:#C65BA8">
+        <div class="phead"><div class="pday" style="background:#C65BA8"><b>🎨</b><span>미술</span></div>
+          <div class="pt"><div class="pk" style="color:#C65BA8">창의·미술 · ${a.k}</div><div class="pu">${a.e} ${a.t}</div></div>
+          <div class="pm">이름 <b>${S.name||"________"}</b><br>날짜 ____월 ____일</div></div>
+        <div class="ws-guide"><div class="gt">👩‍🏫 부모님 가이드</div>
+          <div class="gline"><b>💡 이렇게 해봐요</b> ${a.tip}</div>
+          <div class="gline gsay"><b>💬 이렇게 말해 주세요</b> “정답은 없어! 네 마음대로 그리는 게 제일 멋져. 무엇을 그렸는지 이야기해 줄래?”</div>
+          <div class="gline goops"><b>⚠️ 자주 하는 실수</b> ‘이렇게 그려’라고 대신 그려 주는 것. 서툴러도 스스로 표현하게 두고 과정을 칭찬해요.</div></div>
+        <div class="ws-section"><div class="ws-st"><span class="sno" style="background:#C65BA8">1</span>${a.t}</div>
+          <div class="ws-instr">아래 네모 안에 마음껏 그려 보세요.</div>
+          <div style="border:2px dashed #C9C1B0;border-radius:12px;height:520px;background:#FDFCFA"></div></div>
+        <div class="pfoot"><span>무엇을 그렸나요? <span class="uline" style="min-width:180px"></span></span>
+          <span class="mark">우리집 유치원 · 창의·미술</span></div></div>`;
+      doPrint(html);
+    };
+  }
+  show();
+}
 
 /* ===== Challenge (weakness-weighted) ===== */
 function weightedGen(){
