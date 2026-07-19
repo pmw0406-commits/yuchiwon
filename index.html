@@ -424,11 +424,13 @@
 
 <script>
 /* ===== Storage ===== */
-const DEFAULTS = { name:"", diff:"normal", sound:true, stars:0, days:{}, stats:{} };
+const DEFAULTS = { name:"", diff:"normal", sound:true, stars:0, days:{}, stats:{}, fam:"", ts:0, lastSync:0 };
 let S;
 try{ S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("yuchiwon")||"{}")); }
 catch(e){ S = Object.assign({}, DEFAULTS); }
-function save(){ try{ localStorage.setItem("yuchiwon", JSON.stringify(S)); }catch(e){} }
+function save(push){ S.ts=Date.now();
+  try{ localStorage.setItem("yuchiwon", JSON.stringify(S)); }catch(e){}
+  if(push!==false) syncPush(); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function record(key, ok){
   if(!S.stats[key]) S.stats[key]={o:0,x:0};
@@ -449,6 +451,52 @@ function callName(n){
   if(c>=0xAC00&&c<=0xD7A3) return ((c-0xAC00)%28)>0 ? n+"아" : n+"야";
   return n;
 }
+
+/* ===== Cloud sync — Supabase 가족 코드 (기기 간 기록 동기화) ===== */
+const SUPA_URL="https://bdkurlqmfsswgeiujyev.supabase.co";
+const SUPA_KEY=""; /* anon public key — 설정되면 자동 활성화 */
+const supaOK=()=>!!(SUPA_URL&&SUPA_KEY);
+async function supaFetch(path,opt={}){
+  const r=await fetch(SUPA_URL+"/rest/v1/"+path,{...opt,headers:{
+    "apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,
+    "Content-Type":"application/json","Prefer":"resolution=merge-duplicates",...(opt.headers||{})}});
+  if(!r.ok) throw new Error("supabase "+r.status);
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+function mergeState(r){
+  if(!r) return;
+  if((r.ts||0)>(S.ts||0)) ["name","diff","sound","level","fam"].forEach(k=>{ if(r[k]!==undefined&&r[k]!=="") S[k]=r[k]; });
+  S.stars=Math.max(S.stars||0,r.stars||0);
+  const days=Object.assign({},r.days||{});
+  Object.entries(S.days||{}).forEach(([k,v])=>{ days[k]=Math.max(days[k]||0,v); }); S.days=days;
+  const stats=Object.assign({},r.stats||{});
+  Object.entries(S.stats||{}).forEach(([k,v])=>{ const o=stats[k]||{o:0,x:0};
+    stats[k]={o:Math.max(o.o||0,v.o||0),x:Math.max(o.x||0,v.x||0)}; }); S.stats=stats;
+  if(!S.level&&r.level) S.level=r.level;
+}
+async function syncPull(){
+  if(!supaOK()||!S.fam) return false;
+  try{
+    const rows=await supaFetch(`families?code=eq.${encodeURIComponent(S.fam)}&select=data`);
+    if(rows&&rows[0]&&rows[0].data){ mergeState(rows[0].data); S.lastSync=Date.now(); save(false); return true; }
+  }catch(e){}
+  return false;
+}
+let pushTimer=null;
+function syncPush(){
+  if(!supaOK()||!S.fam) return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(async()=>{
+    try{
+      await supaFetch("families",{method:"POST",body:JSON.stringify(
+        {code:S.fam,data:S,updated_at:new Date().toISOString()})});
+      S.lastSync=Date.now();
+      try{ localStorage.setItem("yuchiwon",JSON.stringify(S)); }catch(e){}
+    }catch(e){}
+  },1500);
+}
+function genFamCode(){ const cs="ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let c="";
+  for(let i=0;i<6;i++) c+=cs[Math.floor(Math.random()*cs.length)]; return c; }
 
 /* ===== Speech ===== */
 let voices=[];
@@ -993,10 +1041,31 @@ function renderParent(){
       <div class="setrow"><span class="sl">소리(음성 읽어주기)</span>
         <span class="seg" id="sndSeg"><button data-s="1">켜기</button><button data-s="0">끄기</button></span></div>
     </div>
+    <div class="panelbox"><h3>☁️ 기기 연동 — 가족 코드</h3>
+      ${!supaOK()
+        ? `<p style="font-size:13.5px;color:var(--ink-2);font-weight:600;margin:0">클라우드 설정 대기 중이에요. 설정이 끝나면 태블릿·PC가 별과 학습 기록을 자동으로 공유합니다.</p>`
+        : S.fam
+        ? `<p style="font-size:14px;font-weight:700;margin:0 0 6px">연결됨 · 코드 <b style="font-size:18px;letter-spacing:2px;color:var(--parent)">${S.fam}</b></p>
+           <p style="font-size:12.5px;color:var(--ink-2);font-weight:600;margin:0 0 12px">다른 기기의 부모님 화면에서 이 코드를 입력하면 기록이 합쳐져요.${S.lastSync?` · 마지막 동기화 ${new Date(S.lastSync).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}`:""}</p>
+           <button class="pill danger" id="famOff">연동 해제</button>`
+        : `<p style="font-size:13.5px;color:var(--ink-2);font-weight:600;margin:0 0 12px">코드를 만들거나 입력하면 태블릿·PC가 같은 기록(별·스티커·레벨)을 공유해요.</p>
+           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+             <button class="pill accent" id="famNew" style="--ac:var(--parent)">새 코드 만들기</button>
+             <input type="text" id="famIn" placeholder="코드 입력" maxlength="6" style="width:110px;text-transform:uppercase;letter-spacing:2px" />
+             <button class="pill" id="famJoin">연결</button></div>`}
+    </div>
     <div class="panelbox"><h3>🗑 기록 관리</h3>
       <p style="font-size:14px;color:var(--ink-soft);font-weight:600;margin:0 0 12px">별·스티커·정답률 기록을 모두 지우고 처음부터 시작합니다.</p>
       <button class="pill danger" id="resetBtn">기록 모두 지우기</button></div>
   </div>`;
+
+  if(supaOK()){
+    const fN=document.getElementById("famNew"), fJ=document.getElementById("famJoin"), fO=document.getElementById("famOff");
+    if(fN) fN.onclick=()=>{ S.fam=genFamCode(); save(); renderParent(); };
+    if(fJ) fJ.onclick=async()=>{ const v=(document.getElementById("famIn").value||"").trim().toUpperCase();
+      if(v.length<4) return; S.fam=v; save(false); await syncPull(); save(); refreshHero(); renderParent(); };
+    if(fO) fO.onclick=()=>{ S.fam=""; S.lastSync=0; save(false); renderParent(); };
+  }
 
   document.getElementById("saveName").onclick=()=>{ S.name=document.getElementById("setName").value.trim(); save(); refreshHero(); renderSetup(); };
   const dseg=document.getElementById("diffSeg");
@@ -1558,8 +1627,9 @@ window.addEventListener("afterprint",()=>{
   document.body.classList.remove("print-ws");
 });
 
-/* ===== 시작: 현재 주소(#해시)의 화면 복원 ===== */
+/* ===== 시작: 현재 주소(#해시)의 화면 복원 + 클라우드 기록 불러오기 ===== */
 route();
+syncPull().then(ok=>{ if(ok){ refreshHero(); renderSetup(); } });
 </script>
 </body>
 </html>
