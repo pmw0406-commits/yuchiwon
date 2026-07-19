@@ -355,6 +355,63 @@
     color:#C0392B; font-size:12px; font-weight:800; line-height:1.18; display:grid; place-items:center;
     transform:translateX(-50%) rotate(-9deg); letter-spacing:.5px; background:color-mix(in srgb,#C0392B 6%, transparent); }
 
+  /* ---------- 마스코트(성장 친구) ---------- */
+  .pet-card{ display:flex; align-items:center; gap:18px; background:
+      linear-gradient(120deg, color-mix(in srgb,var(--think) 8%, var(--surface)), var(--surface) 60%);
+    border:1px solid var(--line); border-radius:22px; padding:16px 20px; margin-bottom:20px; box-shadow:var(--sh-s); }
+  .pet-emoji{ font-size:56px; line-height:1; flex:none; filter:drop-shadow(0 3px 5px rgba(0,0,0,.12)); animation:petbob 3s ease-in-out infinite; }
+  @keyframes petbob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+  .pet-body{ flex:1; min-width:0; }
+  .pet-name{ font-size:17px; font-weight:800; letter-spacing:-.3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pet-lv{ font-size:11px; font-weight:800; color:#fff; background:var(--think); padding:2px 9px; border-radius:999px; }
+  .pet-msg{ font-size:12.5px; font-weight:700; color:var(--ink-2); margin:3px 0 8px; }
+  .pet-bar{ height:9px; background:var(--line-2); border-radius:999px; overflow:hidden; }
+  .pet-bar div{ height:100%; background:linear-gradient(90deg,var(--think),#4FC79A); border-radius:999px; transition:width .5s; }
+  .pet-next{ font-size:11px; font-weight:700; color:var(--ink-3); margin-top:5px; }
+  .pet-rename{ font-family:inherit; font-size:11px; font-weight:800; color:var(--think); background:none; border:none; cursor:pointer; padding:0; text-decoration:underline; }
+
+  /* ---------- 월간 리포트 카드 / 오답노트 (인쇄) ---------- */
+  .report{ box-sizing:border-box; width:794px; min-height:1090px; margin:0 auto; background:#fff; color:#26221A;
+    font-family:var(--font); padding:40px 44px; position:relative; }
+  .rep-head{ display:flex; align-items:flex-end; justify-content:space-between; border-bottom:3px solid var(--parent); padding-bottom:14px; }
+  .rep-eyebrow{ font-size:12.5px; font-weight:800; letter-spacing:3px; color:var(--parent); }
+  .rep-title{ font-size:32px; font-weight:800; letter-spacing:-1px; color:#26221A; margin-top:4px; }
+  .rep-who{ text-align:right; font-size:13px; font-weight:700; color:#6A6456; line-height:1.7; }
+  .rep-who b{ font-size:19px; color:#26221A; }
+  .rep-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0; }
+  .rep-kpi{ background:#FAF8F3; border:1px solid #EBE6DA; border-radius:14px; padding:15px 8px; text-align:center; }
+  .rep-kpi .v{ font-size:27px; font-weight:800; color:var(--parent); font-variant-numeric:tabular-nums; }
+  .rep-kpi .l{ font-size:11.5px; font-weight:800; color:#8A8472; margin-top:3px; }
+  .rep-sec{ margin:20px 0; }
+  .rep-h{ font-size:15px; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:7px; color:#26221A; }
+  .rep-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .rep-cal .cell{ aspect-ratio:1; border-radius:7px; background:#F1EEE6; display:grid; place-items:center;
+    font-size:11px; font-weight:800; color:#B5AE9C; position:relative; }
+  .rep-cal .cell.on1{ background:color-mix(in srgb,var(--think) 22%, #fff); color:#2E7D5B; }
+  .rep-cal .cell.on2{ background:color-mix(in srgb,var(--think) 45%, #fff); color:#1c5a3f; }
+  .rep-cal .cell.on3{ background:var(--think); color:#fff; }
+  .rep-cal .dow{ background:none; color:#8A8472; font-size:11px; aspect-ratio:auto; padding:2px 0; }
+  .rep-bar{ margin:9px 0; }
+  .rep-bar .t{ display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-bottom:4px; }
+  .rep-bar .track{ height:12px; background:#F1EEE6; border-radius:999px; overflow:hidden; }
+  .rep-bar .track div{ height:100%; border-radius:999px; }
+  .rep-comment{ background:#FAF8F3; border:1px solid #EBE6DA; border-left:4px solid var(--parent); border-radius:0 12px 12px 0;
+    padding:14px 18px; font-size:14px; font-weight:600; line-height:1.85; color:#3A362C; }
+  .rep-foot{ margin-top:26px; padding-top:14px; border-top:1px solid #EBE6DA; display:flex; justify-content:space-between;
+    align-items:center; font-size:13px; font-weight:800; color:#6A6456; }
+  .rep-legend{ display:flex; gap:10px; font-size:10.5px; font-weight:700; color:#8A8472; align-items:center; margin-top:7px; }
+  .rep-legend i{ width:13px; height:13px; border-radius:4px; display:inline-block; vertical-align:middle; }
+
+  /* 오답노트 문제 */
+  .rv-sec{ margin:16px 0; break-inside:avoid; }
+  .rv-h{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .rv-h .tag{ font-size:11px; font-weight:800; color:#fff; padding:2px 10px; border-radius:999px; }
+  .rv-instr{ font-size:12px; font-weight:700; color:#8A8472; margin-bottom:10px; }
+  .rv-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px 24px; }
+  .rv-item{ font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; font-variant-numeric:tabular-nums; }
+  .rv-item .no{ color:#B5AE9C; font-size:12px; min-width:18px; }
+  .rv-blank{ display:inline-block; min-width:52px; height:28px; border:1.5px solid #D5CDBD; border-radius:7px; background:#FDFCFA; }
+
   /* ---------- parent ---------- */
   .gate{ max-width:420px; margin:34px auto; text-align:center; background:var(--surface); border:1px solid var(--line);
     border-radius:24px; padding:30px 26px; box-shadow:var(--sh-m); }
@@ -542,6 +599,9 @@
     .cert, .cert-in, .cert-name, .cert-title, .cert-seal, .cert-stats, .cert-badges span{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .cert{ width:100%; min-height:auto; margin:0; padding:8mm; box-shadow:none; }
     .cert-in{ min-height:270mm; }
+    .report, .rep-kpi, .rep-cal .cell, .rep-bar .track div, .rep-comment, .rv-h .tag{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .report{ width:100%; min-height:auto; margin:0; padding:12mm 13mm; box-shadow:none; }
+    .report + .report{ page-break-before:always; }
     @page{ size:A4; margin:0; }   /* 여백 0 = 브라우저 머리글·바닥글 제거, 여백은 종이 안쪽 패딩으로 */
   }
 
@@ -606,6 +666,7 @@
         </div>
       </div>
     </div>
+    <div id="petMount"></div>
     <div id="setupMount"></div>
     <div id="todayTask"></div>
     <div id="menu"></div>
@@ -627,7 +688,7 @@
 
 <script>
 /* ===== Storage ===== */
-const DEFAULTS = { name:"", diff:"normal", sound:true, stars:0, days:{}, stats:{}, fam:"", ts:0, lastSync:0 };
+const DEFAULTS = { name:"", diff:"normal", sound:true, stars:0, days:{}, stats:{}, fam:"", ts:0, lastSync:0, petName:"" };
 let S;
 try{ S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("yuchiwon")||"{}")); }
 catch(e){ S = Object.assign({}, DEFAULTS); }
@@ -800,7 +861,45 @@ function refreshHero(){
   const s1=document.getElementById("stStreak"); if(s1) s1.textContent=streak();
   const s2=document.getElementById("stStars"); if(s2) s2.textContent=S.stars;
   const s3=document.getElementById("stStickers"); if(s3) s3.textContent=Math.min(24,Math.floor(S.stars/10));
+  renderPet();
   renderTodayTask();
+}
+/* ===== 마스코트(성장하는 학습 친구) ===== */
+const PET_STAGES=[
+  {ic:"🥚",name:"알",         at:0},
+  {ic:"🐣",name:"갓 깨어난 아기",at:30},
+  {ic:"🐥",name:"아기 새",     at:80},
+  {ic:"🐤",name:"튼튼한 새",   at:170},
+  {ic:"🦉",name:"지혜로운 부엉이",at:320},
+  {ic:"🦅",name:"멋진 독수리", at:520},
+  {ic:"🦄",name:"전설의 친구", at:800},
+];
+function petInfo(){
+  const stars=S.stars||0; let i=0;
+  for(let k=0;k<PET_STAGES.length;k++){ if(stars>=PET_STAGES[k].at) i=k; }
+  const cur=PET_STAGES[i], nx=PET_STAGES[i+1]||null;
+  const pct=nx?Math.round((stars-cur.at)/(nx.at-cur.at)*100):100;
+  return {i, cur, nx, pct, stars, toNext:nx?nx.at-stars:0};
+}
+function renderPet(){
+  const m=document.getElementById("petMount"); if(!m) return;
+  const p=petInfo(); const named=!!(S.petName&&S.petName.trim());
+  const nm=named?S.petName.trim():p.cur.name;
+  const badge=named?`Lv.${p.i+1} · ${p.cur.name}`:`Lv.${p.i+1}`;
+  const msg=p.nx?`별 ${p.toNext}개 더 모으면 <b>${p.nx.ic} ${p.nx.name}</b>(으)로 자라요!`
+                :"최고 단계까지 자랐어요! 정말 대단해요 🎉";
+  m.innerHTML=`<div class="pet-card">
+    <div class="pet-emoji">${p.cur.ic}</div>
+    <div class="pet-body">
+      <div class="pet-name">${nm} <span class="pet-lv">${badge}</span>
+        <button class="pet-rename" id="petRename">✏️ ${named?"이름 바꾸기":"이름 짓기"}</button></div>
+      <div class="pet-msg">${msg}</div>
+      <div class="pet-bar"><div style="width:${p.pct}%"></div></div>
+      <div class="pet-next">⭐ ${p.stars}개 모음 ${p.nx?`· 다음 단계까지 ${p.pct}%`:""}</div>
+    </div></div>`;
+  const rb=document.getElementById("petRename");
+  if(rb) rb.onclick=()=>{ const v=prompt("친구의 이름을 지어 주세요!", S.petName||p.cur.name);
+    if(v!==null){ S.petName=v.slice(0,8); save(); renderPet(); } };
 }
 function renderTodayTask(){
   const m=document.getElementById("todayTask"); if(!m||typeof nextTask!=="function") return;
@@ -1946,6 +2045,110 @@ function certPaper(){
     </div>
   </div></div>`;
 }
+
+/* ===== 월간 학습 리포트 카드(인쇄) ===== */
+function monthStats(y,mth){  /* mth: 0-based */
+  const pad=n=>String(n).padStart(2,"0");
+  const days=new Date(y,mth+1,0).getDate();
+  let learnDays=0, stars=0, sheets=0;
+  for(let d=1;d<=days;d++){ const k=`${y}-${pad(mth+1)}-${pad(d)}`;
+    const st=S.days[k]||0; if(st>0)learnDays++; stars+=st;
+    sheets+=Object.values(S.done||{}).filter(v=>v===k).length; }
+  return {days, learnDays, stars, sheets};
+}
+function reportCard(y,mth){
+  const pad=n=>String(n).padStart(2,"0");
+  const ms=monthStats(y,mth);
+  const nm=(S.name&&S.name.trim())||"________";
+  const totalQ=Object.values(S.stats||{}).reduce((s,v)=>s+v.o+v.x,0);
+  const okQ=Object.values(S.stats||{}).reduce((s,v)=>s+v.o,0);
+  const acc=totalQ?Math.round(okQ/totalQ*100):0;
+  /* 달력 히트맵 */
+  const first=new Date(y,mth,1).getDay(); const dim=ms.days;
+  let cal=["일","월","화","수","목","금","토"].map(d=>`<div class="cell dow">${d}</div>`).join("");
+  for(let i=0;i<first;i++) cal+=`<div class="cell" style="background:transparent"></div>`;
+  for(let d=1;d<=dim;d++){ const k=`${y}-${pad(mth+1)}-${pad(d)}`; const st=S.days[k]||0;
+    const cls=st>=10?"on3":st>=5?"on2":st>0?"on1":""; cal+=`<div class="cell ${cls}">${d}</div>`; }
+  /* 과목별 정답률 */
+  const subjMap={}; GENS.forEach(g=>{ const s=S.stats[g.k]; if(!s)return;
+    subjMap[g.subj]=subjMap[g.subj]||{o:0,n:0}; subjMap[g.subj].o+=s.o; subjMap[g.subj].n+=s.o+s.x; });
+  const colors={"수학":"var(--math)","국어":"var(--korean)","사고력":"var(--think)","영어":"var(--english)"};
+  const bars=Object.entries(subjMap).filter(([,v])=>v.n>0).map(([subj,v])=>{ const a=Math.round(v.o/v.n*100);
+    return `<div class="rep-bar"><div class="t"><span>${subj}</span><span>${a}% · ${v.n}문제</span></div>
+      <div class="track"><div style="width:${a}%;background:${colors[subj]||"var(--parent)"}"></div></div></div>`; }).join("")
+    || `<div style="font-size:13px;font-weight:600;color:#8A8472">아직 이번 달 태블릿 학습 기록이 없어요. 학습지 위주로 진행했다면 완료 장수를 확인해 주세요.</div>`;
+  /* 원장 코멘트(자동) */
+  const weak=Object.entries(subjMap).filter(([,v])=>v.n>=4).sort((a,b)=>a[1].o/a[1].n-b[1].o/b[1].n)[0];
+  const strong=Object.entries(subjMap).filter(([,v])=>v.n>=4).sort((a,b)=>b[1].o/b[1].n-a[1].o/a[1].n)[0];
+  let comment=`${callName(nm)} 이번 달 <b>${ms.learnDays}일</b> 동안 꾸준히 학습했고, 학습지 <b>${ms.sheets}장</b>을 완성했어요. `;
+  if(strong) comment+=`특히 <b>${strong[0]}</b>에서 좋은 정답률을 보였습니다. `;
+  if(weak && weak[1].o/weak[1].n<0.8) comment+=`<b>${weak[0]}</b>은 조금 더 연습하면 좋아요 — ‘오답노트(약점 복습지)’를 함께 활용해 주세요. `;
+  comment+=`매일 같은 시간, 짧게라도 이어 가는 것이 가장 큰 힘이 됩니다. 잘하고 있어요!`;
+  return `<div class="report">
+    <div class="rep-head"><div><div class="rep-eyebrow">우리집 유치원 · MONTHLY REPORT</div>
+      <div class="rep-title">${y}년 ${mth+1}월 학습 리포트</div></div>
+      <div class="rep-who">이름 <b>${nm}</b><br>${S.level?`진단 국어 Lv${S.level.k} · 수학 Lv${S.level.m}`:""}</div></div>
+    <div class="rep-kpis">
+      <div class="rep-kpi"><div class="v">${ms.learnDays}일</div><div class="l">학습한 날</div></div>
+      <div class="rep-kpi"><div class="v">${ms.sheets}장</div><div class="l">완료한 학습지</div></div>
+      <div class="rep-kpi"><div class="v">⭐${ms.stars}</div><div class="l">이달 모은 별</div></div>
+      <div class="rep-kpi"><div class="v">${acc}%</div><div class="l">전체 정답률</div></div>
+    </div>
+    <div class="rep-sec"><div class="rep-h">📅 이달의 학습 달력</div>
+      <div class="rep-cal">${cal}</div>
+      <div class="rep-legend">적음 <i style="background:#F1EEE6"></i><i style="background:color-mix(in srgb,var(--think) 22%,#fff)"></i><i style="background:color-mix(in srgb,var(--think) 45%,#fff)"></i><i style="background:var(--think)"></i> 많음 · 색이 진할수록 그날 별을 많이 모았어요</div></div>
+    <div class="rep-sec"><div class="rep-h">📊 과목별 정답률(누적)</div>${bars}</div>
+    <div class="rep-sec"><div class="rep-h">💬 원장님 한마디</div><div class="rep-comment">${comment}</div></div>
+    <div class="rep-foot"><span>발행일 ${new Date().getFullYear()}년 ${new Date().getMonth()+1}월 ${new Date().getDate()}일</span>
+      <span>우리집 유치원 🌸</span></div>
+  </div>`;
+}
+
+/* ===== 오답노트(약점 복습지) 자동 생성 · 인쇄 ===== */
+function weakReviewKeys(max){
+  const scored=GENS.map(g=>{ const s=S.stats[g.k]||{o:0,x:0}; const n=s.o+s.x;
+    return {g, n, x:s.x, acc:n?s.o/n:1}; });
+  let weak=scored.filter(r=>r.x>0).sort((a,b)=>a.acc-b.acc||b.x-a.x);
+  if(weak.length===0){ /* 기록이 없으면 진단 보충 유형 또는 기본 세트 */
+    const miss=(S.level&&S.level.miss)||[];
+    const missKeys=GENS.filter(g=>miss.some(m=>g.label.includes(m)||m.includes(g.label))).map(g=>({g}));
+    weak = missKeys.length?missKeys : ["add","make10","antonym","pattern"].map(k=>({g:GEN_BY_KEY[k]})).filter(r=>r.g);
+  }
+  return weak.slice(0,max||4).map(r=>r.g);
+}
+function reviewSheet(){
+  const keys=weakReviewKeys(4);
+  const tagColors={"수학":"var(--math)","국어":"var(--korean)","사고력":"var(--think)","영어":"var(--english)"};
+  const secs=keys.map((g,gi)=>{
+    const items=[]; const seen=new Set(); let guard=0;
+    while(items.length<6 && guard++<120){ let p; try{ p=g.g(); }catch(e){ break; }
+      const ansCh=(p.choices||[]).find(c=>c.ok); if(!ansCh) continue;
+      const row=(p.rowEmojis&&p.rowEmojis.length)?p.rowEmojis.join(" ")+"  ":"";
+      const q0=String(p.text).replace(/=\s*\?$/,"= ").replace(/[?？]$/,"");
+      const q=row+q0;
+      const key=(p.rowEmojis?p.rowEmojis.join(""):"")+"|"+q0; if(seen.has(key)) continue; seen.add(key);
+      items.push({q, a:ansCh.show}); }
+    const wide=items.some(it=>it.q.length>16);
+    const rows=items.map((it,i)=>`<div class="rv-item"><span class="no">${i+1}</span>${it.q}<span class="rv-blank"></span>
+      <span class="ans"> ${it.a}</span></div>`).join("");
+    const ansLine=items.map((it,i)=>`${i+1}) ${it.a}`).join("&nbsp;&nbsp; ");
+    return {html:`<div class="rv-sec"><div class="rv-h"><span class="tag" style="background:${tagColors[g.subj]||"var(--parent)"}">${g.subj}</span> ${g.label}</div>
+      <div class="rv-instr">💡 ${g.tip}</div><div class="rv-grid"${wide?' style="grid-template-columns:1fr"':''}>${rows}</div></div>`, ans:`<b>${gi+1}. ${g.label}</b> ${ansLine}`};
+  });
+  const nm=(S.name&&S.name.trim())||"________";
+  return `<div class="paper" style="--sc:var(--parent)">
+    <div class="phead"><div class="pday" style="background:var(--parent)"><b>복습</b><span>오답노트</span></div>
+      <div class="pt"><div class="pk">약점 집중 복습지 · 우리집 유치원</div>
+        <div class="pu">틀리기 쉬운 유형만 모았어요</div></div>
+      <div class="pm">이름 <b>${nm}</b> &nbsp; 날짜 ____월 ____일<br>스스로 평가 <span class="selfstars">☆ ☆ ☆</span></div></div>
+    <div class="ws-guide"><div class="gt">🎯 이 학습지는 <b>${nm}</b>(이)가 그동안 자주 틀린 유형으로 자동 구성됐어요.</div>
+      <div class="gline">천천히 다시 풀어 보고, 틀린 문제는 부모님과 한 번 더 이야기해요. 다 맞히면 크게 칭찬해 주세요!</div></div>
+    ${secs.map(s=>s.html).join("")}
+    <div class="pfoot"><span>칭찬 한마디 <span class="uline" style="min-width:170px"></span></span><span class="mark">우리집 유치원 · 오답노트</span></div>
+    <div class="ansbox"><div class="at">정답 (부모용)</div><div class="al">${secs.map(s=>s.ans).join("<br>")}</div></div>
+  </div>`;
+}
+
 function renderSticker(){
   const unlocked=Math.min(STICKERS.length, Math.floor(S.stars/10));
   const toNext=unlocked>=STICKERS.length?0:10-(S.stars%10);
@@ -2033,6 +2236,12 @@ function renderParent(){
         <div class="kpi"><div class="v">⭐ ${S.stars}</div><div class="l">누적 별</div></div>
         <div class="kpi"><div class="v">${accAll}%</div><div class="l">전체 정답률</div></div>
       </div>${S.level?`<div style="margin-top:13px;font-size:13.5px;font-weight:700;color:var(--ink-2)">🧭 레벨 테스트(${S.level.date}) — 수학 Lv${S.level.m} · 국어 Lv${S.level.k} · 영어 Lv${S.level.e} → <b style="color:var(--ink)">${S.level.rec}일차 추천</b></div>`:""}</div>
+    <div class="panelbox full"><h3>🖨 인쇄물 — 보관하고 붙여 주세요</h3>
+      <p style="font-size:13px;font-weight:600;color:var(--ink-2);margin:0 0 12px">아이의 학습을 한눈에 담은 인쇄물이에요. 머리글·바닥글 없이 A4 한 장으로 나옵니다.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="pill accent" id="ppReport" style="--ac:var(--parent)">🗓 이달의 리포트 카드</button>
+        <button class="pill accent" id="ppReview" style="--ac:var(--no)">🎯 오답노트(약점 복습지)</button>
+        <button class="pill accent" id="ppCert" style="--ac:var(--sticker)">🏆 성취 상장</button></div></div>
     <div class="panelbox full"><h3>🌸 다현이 맞춤 적용 현황</h3>
       <div style="font-size:13.5px;font-weight:600;color:var(--ink-2);line-height:1.9">
       ${S.level?`<b style="color:var(--ink)">진단(${S.level.date})</b> — 국어 Lv${S.level.k} (다음 목표: 맞춤법·문장 만들기) · 수학 Lv${S.level.m} (연습: 10 만들기)<br>`:""}
@@ -2123,6 +2332,10 @@ function renderParent(){
     if(fO) fO.onclick=()=>{ S.fam=""; S.lastSync=0; save(false); renderParent(); };
   }
 
+  { const n=new Date();
+    const rp=document.getElementById("ppReport"); if(rp) rp.onclick=()=>doPrint(reportCard(n.getFullYear(),n.getMonth()));
+    const rv=document.getElementById("ppReview"); if(rv) rv.onclick=()=>doPrint(reviewSheet());
+    const cc=document.getElementById("ppCert"); if(cc) cc.onclick=()=>doPrint(certPaper()); }
   document.getElementById("saveName").onclick=()=>{ S.name=document.getElementById("setName").value.trim(); save(); refreshHero(); renderSetup(); };
   const dseg=document.getElementById("diffSeg");
   const paint=()=>{ [...dseg.children].forEach(b=>b.classList.toggle("on",b.dataset.d===S.diff));
