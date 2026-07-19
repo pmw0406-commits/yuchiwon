@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>우리집 유치원</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 <style>
@@ -31,13 +31,22 @@
     --sh-s:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
     --sh-m:0 2px 4px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4); }
 
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
   html,body{ margin:0; padding:0; }
-  html{ scroll-behavior:smooth; }
   body{
-    font-family:var(--font); color:var(--ink); background:var(--bg);
+    font-family:var(--font); color:var(--ink);
+    background:
+      radial-gradient(900px 420px at 88% -120px, color-mix(in srgb, var(--sticker) 7%, transparent), transparent 70%),
+      radial-gradient(760px 400px at -80px 34%, color-mix(in srgb, var(--korean) 4%, transparent), transparent 70%),
+      var(--bg);
     min-height:100vh; -webkit-font-smoothing:antialiased; overflow-x:hidden;
     font-size:16px; line-height:1.55; letter-spacing:-.01em;
+    overscroll-behavior-y:none;
+  }
+  /* 터치 기기: 호버 애니메이션이 탭에 눌러붙어 화면이 움직이는 현상 방지 */
+  @media (hover:none){
+    .tile:hover,.opt:hover,.pill:hover,.card:hover,.iconbtn:hover,.mode-btn:hover,.daychip:hover{
+      transform:none !important; box-shadow:var(--sh-s) !important; }
   }
   .wrap{ max-width:1120px; margin:0 auto; padding:22px 22px 80px; }
   button{ font-family:inherit; }
@@ -100,7 +109,8 @@
   .tile:hover{ transform:translateY(-3px); box-shadow:var(--sh-m); border-color:color-mix(in srgb, var(--tc) 30%, var(--line)); }
   .tile:hover .t-arrow{ opacity:1; transform:none; }
   .tile .chip{ width:54px; height:54px; border-radius:17px; display:grid; place-items:center; flex:none;
-    background:color-mix(in srgb, var(--tc) 11%, var(--surface)); color:var(--tc); }
+    background:linear-gradient(140deg, color-mix(in srgb, var(--tc) 16%, var(--surface)), color-mix(in srgb, var(--tc) 7%, var(--surface)));
+    color:var(--tc); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--tc) 14%, transparent); }
   .tile .chip svg{ width:26px; height:26px; }
   .tile .tx{ min-width:0; }
   .tile .t-en{ font-size:10px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase;
@@ -139,6 +149,7 @@
 
   /* ---------- quiz ---------- */
   .stage{ max-width:640px; margin:0 auto; text-align:center; }
+  .stage .qb{ min-height:380px; }   /* 문제 전환 시 화면 높이 점프 방지 */
   .scorebar{ display:inline-flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line);
     padding:8px 18px; border-radius:999px; box-shadow:var(--sh-s); font-weight:800; font-size:17px; }
   .q-row{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px;
@@ -151,6 +162,7 @@
     border-radius:20px; padding:22px 8px; box-shadow:var(--sh-s); transition:.14s; min-height:104px;
     display:flex; align-items:center; justify-content:center; }
   .opt:hover{ transform:translateY(-2px); box-shadow:var(--sh-m); }
+  .opt:active{ transform:scale(.965); }   /* 탭 시 눌림 피드백 */
   .opt:disabled{ cursor:default; }
   .opt .oe{ font-size:50px; } .opt .ol{ font-size:36px; font-weight:800; font-variant-numeric:tabular-nums; }
   .opt.right{ border-color:var(--ok); background:color-mix(in srgb,var(--ok) 10%, var(--surface)); }
@@ -977,6 +989,7 @@ function runLT(){
                {k:"e",label:"영어",color:"var(--english)",g:ltEng}];
   const QN=8, START=3, MAXL=7;
   const res={m:0,k:0,e:0}; const missed=[]; const okSkills=[]; const review=[];
+  const qlog=[]; const trajS={m:[],k:[],e:[]};   /* 전체 문항 기록 + 측정 궤적 */
   let si=0, lvl=START, asked=0, hist=[], qn=0;
   const TOTALQ=QN*order.length;
   secBody.innerHTML=`<div class="stage"><div class="progress"><div class="bar" style="background:#0F87A8"></div></div>
@@ -993,6 +1006,7 @@ function runLT(){
   }
   function nextSubject(){
     res[order[si].k]=estimate();
+    trajS[order[si].k]=hist.slice();
     si++; lvl=START; asked=0; hist=[];
   }
   function ask(){
@@ -1011,7 +1025,10 @@ function runLT(){
     const wrap=qb.querySelector(".q-choices");
     p.choices.forEach(ch=>{ const b=document.createElement("button"); b.className="opt"; b.innerHTML=ltOpt(ch);
       b.onclick=()=>{ [...wrap.children].forEach(x=>x.disabled=true);
-        hist.push({l:lvl,ok:ch.ok}); asked++;
+        hist.push({l:lvl,ok:!!ch.ok}); asked++;
+        const cAns=p.choices.find(c=>c.ok);
+        qlog.push({s:sub.label,k:sub.k,sk:p.skill,l:lvl,ok:!!ch.ok,
+          q:p.text.replace(/<[^>]*>/g,"").slice(0,44),a:cAns?String(cAns.show):""});
         if(ch.ok){ b.classList.add("right"); confetti(); speak("딩동댕!");
           okSkills.push(`${sub.label}·${p.skill}`);
           lvl=Math.min(MAXL,lvl+1); }
@@ -1033,11 +1050,12 @@ function runLT(){
     const rec=Math.min(per.m,per.k,per.e);
     const missU=[...new Set(missed)].slice(0,8);
     const okU=[...new Set(okSkills)];
-    S.level={m:res.m,k:res.k,e:res.e,rec,per,miss:missU,review:review.slice(0,8),date:todayStr()}; save();
+    S.level={m:res.m,k:res.k,e:res.e,rec,per,miss:missU,review:review.slice(0,8),
+      traj:trajS,date:todayStr()}; save();
     /* 결과를 클라우드에 기록 → 맞춤 커리큘럼 조정에 사용 */
     if(supaOK()){ supaFetch("test_results",{method:"POST",body:JSON.stringify(
       {fam:S.fam||null,name:S.name||null,m:res.m,k:res.k,e:res.e,rec,
-       miss:missU,review:review.slice(0,8)})}).catch(()=>{}); }
+       miss:missU,review:{wrong:review.slice(0,8),traj:trajS,qlog:qlog}})}).catch(()=>{}); }
     bigConfetti(); speak(`테스트 끝! ${S.name?callName(S.name)+", ":""}정말 잘했어요!`);
     const rows=order.map(sub=>{ const v=res[sub.k];
       return `<div class="lvl-row"><span class="ln">${sub.label}</span>
@@ -1050,65 +1068,175 @@ function runLT(){
     const reviewHTML=review.length?`<div class="panelbox" style="margin-top:16px"><h3>📋 오답 리뷰</h3>
       ${review.slice(0,8).map(r=>`<div style="font-size:13.5px;font-weight:600;padding:7px 0;border-bottom:1px dashed var(--line)">
         <span style="font-weight:800;color:var(--no)">[${r.s}·${r.skill}]</span> ${r.q} → <b style="color:var(--ok)">${r.a}</b></div>`).join("")}</div>`:"";
+    const trajHTML=`<div class="panelbox" style="margin-top:16px"><h3>📈 측정 궤적 — 오르내리다 멈춘 곳이 우리 아이 레벨</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">${order.map(s=>
+        `<div style="text-align:center"><div style="font-size:12px;font-weight:800;color:${s.color};margin-bottom:4px">${s.label} · Lv${res[s.k]}</div>${trajSVG(trajS[s.k],s.color)}</div>`).join("")}</div></div>`;
     secBody.innerHTML=`<div class="lvl-res">
       <div class="lvl-intro" style="margin-bottom:16px"><div class="big">🎉</div><h2>${S.name?callName(S.name)+"의 ":""}진단 결과</h2></div>
-      ${rows}
+      ${rows}${trajHTML}
       <div class="lvl-reco">문제집은 <b>${rec}일차</b>부터 시작하는 것을 추천해요!<br>
         <span style="font-size:13px;color:var(--ink-2)">하루 3장이 함께 가도록 가장 기초가 필요한 과목(${rec===per.m?"수학":rec===per.k?"국어":"영어"})에 맞췄어요.</span></div>
       ${missHTML}${reviewHTML}
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px">
-        <button class="pill accent" id="ltReport" style="--ac:var(--parent)">🖨 진단 리포트 인쇄</button>
+        <button class="pill accent" id="ltReport" style="--ac:var(--parent)">🖨 상세 진단 리포트 인쇄</button>
         <button class="pill accent" id="ltGo" style="--ac:var(--book)">📄 ${rec}일차 학습지 열기</button>
         <button class="pill" id="ltRetry">다시 테스트</button></div></div>`;
     document.getElementById("ltGo").onclick=()=>openDay(rec-1);
     document.getElementById("ltRetry").onclick=renderLevel;
     document.getElementById("ltReport").onclick=()=>{
       document.body.classList.add("print-ws");
-      document.getElementById("printMount").innerHTML=ltReportHTML(res,per,rec,missU,okU,review);
+      document.getElementById("printMount").innerHTML=ltReportHTML(res,per,rec,missU,okU,review,trajS,qlog);
       window.print(); };
   }
   ask();
 }
 function ltComment(v){
-  if(v<=2) return "기초 개념부터 차근차근 다지는 시기예요. 매일 짧게, 재미있게 반복하면 금방 자랍니다.";
+  if(v<=2) return "기초 개념을 다지는 시기예요. 매일 짧게, 구체물(손가락·바둑돌)로 재미있게 반복하면 금방 자랍니다.";
   if(v<=4) return "또래 평균 이상이에요. 현재 단계를 촘촘히 다지면 상위권 진입이 충분히 가능해요.";
-  if(v===5) return "취학 준비가 완성 단계예요. 다양한 유형으로 폭을 넓혀 주세요.";
-  return "초등 과정을 선행 중이에요. 진도보다 사고력·서술형 확장에 무게를 두는 것을 추천해요.";
+  if(v===5) return "취학 준비가 완성 단계예요. 다양한 유형과 문장제로 폭을 넓혀 주세요.";
+  return "초등 과정을 선행 중이에요. 진도 욕심보다 사고력·서술형 확장에 무게를 두는 것을 추천해요.";
 }
-function ltReportHTML(res,per,rec,missU,okU,review){
-  const subs=[["수학","m","var(--math)",MU],["국어","k","var(--korean)",KU],["영어","e","var(--english)",EU]];
+function ltGrade(avg){
+  if(avg>=6.5) return ["S","최상위권 — 초1 상위 과정 선행"];
+  if(avg>=5.5) return ["A+","상위권 — 초1 과정 선행 중"];
+  if(avg>=4.5) return ["A","우수 — 취학 준비 완성 단계"];
+  if(avg>=3.5) return ["B+","양호 — 또래 상위 수준"];
+  if(avg>=2.5) return ["B","보통 — 또래 평균 수준"];
+  return ["C","기초 다지기 — 천천히 함께 시작"];
+}
+/* 유형별 맞춤 처방: [지도 포인트, 문제집 추천 일차] */
+const LT_RX={
+  "한 자리 덧셈":["바둑돌·손가락으로 '모으기' 경험을 충분히 쌓아요",1],
+  "한 자리 뺄셈":["물건을 직접 덜어내며 남은 수를 세어 봐요",1],
+  "받아올림 덧셈":["'10을 만들고 남은 수 더하기' 전략을 소리 내어 반복해요",1],
+  "10 만들기":["10 짝꿍(1·9, 2·8, 3·7…)을 노래처럼 외워요",1],
+  "받아내림 뺄셈":["'10에서 먼저 빼기'를 구체물로 보여 주세요",11],
+  "세 수 계산":["앞에서부터 차례로, 10이 되는 짝을 먼저 묶어요",51],
+  "두 자리+한 자리":["일의 자리끼리 더하는 자리 개념을 색깔로 구분해요",21],
+  "자릿값":["10원·1원 동전으로 수 만들기 놀이를 해요",21],
+  "두 자리 덧셈":["세로셈으로 자리 맞춰 쓰는 습관을 들여요",31],
+  "수의 크기 비교":["십의 자리부터 비교하는 순서를 익혀요",21],
+  "받아올림 두 자리 덧셈":["세로셈에서 받아올림 1을 표시하는 습관을 잡아요",31],
+  "수 규칙 찾기":["이웃한 수의 차이를 말로 설명하게 해요",51],
+  "받아내림 두 자리 뺄셈":["'윗집에서 10 빌려오기' 이야기로 개념을 잡아요",41],
+  "묶어 세기 (곱셈 개념)":["2·5·10씩 뛰어 세기를 생활 속 놀이로 해요",71],
+  "시계 읽기":["집 시계로 정시→30분 순서로 매일 읽어 봐요",61],
+  "반대말":["생활 속 '반대로 말하기' 게임을 주고받아요",1],
+  "흉내 내는 말":["의성어·의태어를 몸으로 표현하며 익혀요",1],
+  "무리 짓기":["마트 전단지를 오려 분류 놀이를 해요",11],
+  "비슷한 말":["같은 뜻 다른 말 찾기 퀴즈를 내 봐요",11],
+  "세는 말":["물건을 세며 단위(마리·권·대)를 붙여 말해요",11],
+  "조사 넣기":["조사만 바꿔 말하며 어감 차이를 느껴 봐요",21],
+  "맞춤법":["소리와 글자가 다른 낱말 카드를 만들어 붙여요",21],
+  "문장 만들기":["낱말 카드를 배열해 문장 만들기 놀이를 해요",21],
+  "속담":["하루 한 속담을 상황극으로 익혀요",81],
+  "짧은 글 읽기":["소리 내어 읽고 답을 손가락으로 짚어 확인해요",31],
+  "긴 글 읽기":["문장 단위로 끊어 읽고 한 줄 요약을 말해 봐요",41],
+  "이어 주는 말":["'그래서/그러나'로 문장 잇기 게임을 해요",51],
+  "추론 독해":["'왜 그랬을까?' 질문을 던지는 습관을 들여요",71],
+  "높임말":["어른께 말하기 역할놀이로 자연스럽게 익혀요",81],
+  "대문자 알기":["알파벳 카드 빨리 찾기 게임을 해요",1],
+  "소문자 알기":["대문자 옆에 소문자 짝을 붙여 봐요",1],
+  "대소문자 짝":["메모리 카드 짝맞추기 놀이로 익혀요",41],
+  "듣고 찾기":["음가를 듣고 글자를 가리키는 연습을 반복해요",11],
+  "첫소리 찾기":["집 안 물건의 첫소리를 말하는 놀이를 해요",21],
+  "첫 글자 채우기":["첫소리를 바꿔 새 단어 만들기 놀이를 해요",51],
+  "단어 읽기":["c-a-t처럼 소리를 이어 붙여 읽어요",51],
+  "그림→단어":["그림 보고 단어 고르기 카드를 만들어요",51],
+  "문장 이해":["문장을 읽고 알맞은 그림을 가리켜 봐요",61],
+  "사이트 워드":["통문자 카드를 벽에 붙여 자주 노출해요",61],
+  "단어 가족":["-at 가족 끝말 바꾸기 놀이를 해요",51],
+  "문답 표현":["What is this? 문답을 매일 주고받아요",91],
+  "문장 판단":["문장을 읽고 O/X를 몸으로 표현해요",91],
+};
+function trajSVG(arr,color){
+  const n=arr.length||1;
+  const px=i=>n>1?16+i*(208/(n-1)):120;
+  const py=l=>104-(l-1)*(88/6);
+  let grid=""; for(let L=1;L<=7;L++) grid+=`<line x1="12" y1="${py(L)}" x2="228" y2="${py(L)}" stroke="#EDE9DF" stroke-width="1"/>
+    <text x="6" y="${py(L)+3}" font-size="7" fill="#B3AC9E" text-anchor="middle">${L}</text>`;
+  const pts=arr.map((h,i)=>`${px(i)},${py(h.l)}`).join(" ");
+  const dots=arr.map((h,i)=>`<circle cx="${px(i)}" cy="${py(h.l)}" r="4.2" fill="${h.ok?"#1F9E64":"#D6455D"}" stroke="#fff" stroke-width="1.4"/>`).join("");
+  return `<svg viewBox="0 0 240 118" style="width:230px;max-width:100%;background:#FDFCFA;border:1px solid #EDE9DF;border-radius:10px">${grid}
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/>${dots}</svg>`;
+}
+function ltReportHTML(res,per,rec,missU,okU,review,trajS,qlog){
+  const subs=[["수학","m","var(--math)","#2E63E7"],["국어","k","var(--korean)","#D6455D"],["영어","e","var(--english)","#E08A00"]];
+  const avg=(res.m+res.k+res.e)/3;
+  const [gl,gd]=ltGrade(avg);
+  const td='padding:6px 9px;border:1px solid #E8E3D8;';
+  const th='padding:6px 9px;border:1px solid #E8E3D8;background:#F7F4EE;font-weight:800;';
+  /* 1. 프로파일 + 궤적 */
   const bars=subs.map(([lab,k,c])=>{ const v=res[k];
-    return `<div style="display:flex;align-items:center;gap:12px;margin:9px 0">
-      <b style="min-width:44px;font-size:14px">${lab}</b>
+    return `<div style="display:flex;align-items:center;gap:12px;margin:8px 0">
+      <b style="min-width:40px;font-size:14px">${lab}</b>
       <span style="flex:1;height:12px;background:#F0EDE6;border-radius:99px;overflow:hidden"><span style="display:block;height:100%;width:${v/7*100}%;background:${c};border-radius:99px"></span></span>
-      <span style="font-size:13px;font-weight:800;min-width:150px">Lv${v}/7 · ${LVL_BAND[v]}</span></div>`; }).join("");
-  const comments=subs.map(([lab,k])=>`<div class="kitem" style="margin:7px 0"><b>${lab}</b> — ${ltComment(res[k])}</div>`).join("");
-  const okChips=okU.slice(0,8).map(m=>`<span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;border:1.3px solid #BFE0CC;color:#1F7A4D;background:#F1F9F4;display:inline-block;margin:2px">${m}</span>`).join("");
-  const missChips=missU.map(m=>`<span style="font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;border:1.3px solid #EBC4CC;color:#B03A52;background:#FBF2F4;display:inline-block;margin:2px">${m}</span>`).join("");
+      <span style="font-size:12.5px;font-weight:800;min-width:190px">Lv${v}/7 · ${LVL_BAND[v]} <span style="color:#8a8578">(${per[k]}일차 수준)</span></span></div>`; }).join("");
+  const trajRow=`<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:10px">${subs.map(([lab,k,c,hex])=>
+    `<div style="text-align:center"><div style="font-size:11.5px;font-weight:800;color:${hex};margin-bottom:3px">${lab} 측정 궤적</div>${trajSVG(trajS[k],hex)}</div>`).join("")}</div>
+    <div style="font-size:11px;color:#8a8578;font-weight:600;margin-top:5px">● 정답(초록) · 오답(빨강) — 계단식 적응 검사: 문제를 맞히면 한 단계 올라가고 틀리면 내려가며, 그래프가 진동하는 높이가 아이의 실제 수준입니다.</div>`;
+  /* 2. 문항별 상세 기록 */
+  const logRows=qlog.map((r,i)=>`<tr>
+    <td style="${td}text-align:center">${i+1}</td><td style="${td}">${r.s}</td>
+    <td style="${td}text-align:center">${r.l}단계</td><td style="${td}">${r.sk}</td>
+    <td style="${td}">${r.q}</td>
+    <td style="${td}text-align:center;font-weight:800;color:${r.ok?"#1F9E64":"#D6455D"}">${r.ok?"○":"✗"}</td>
+    <td style="${td}">${r.ok?"":r.a}</td></tr>`).join("");
+  /* 3. 유형별 정오 분석 */
+  const tally={};
+  qlog.forEach(r=>{ const key=r.s+"|"+r.sk; if(!tally[key]) tally[key]={s:r.s,sk:r.sk,o:0,x:0,l:r.l};
+    r.ok?tally[key].o++:tally[key].x++; });
+  const tallyRows=Object.values(tally).map(t=>`<tr>
+    <td style="${td}">${t.s}</td><td style="${td}">${t.sk}</td>
+    <td style="${td}text-align:center">${"●".repeat(t.o)}${"○".repeat(t.x)}</td>
+    <td style="${td}text-align:center;font-weight:800">${t.o}/${t.o+t.x}</td>
+    <td style="${td}text-align:center;color:${t.x===0?"#1F9E64":(t.o===0?"#D6455D":"#A5762B")};font-weight:800">${t.x===0?"안정":(t.o===0?"보충 필요":"연습 중")}</td></tr>`).join("");
+  /* 4. 해석 + 처방 */
+  const comments=subs.map(([lab,k])=>`<div class="kitem" style="margin:6px 0"><b>${lab} (Lv${res[k]} · ${LVL_NAMES[res[k]]})</b> — ${ltComment(res[k])}</div>`).join("");
+  const rxSkills=[...new Set(missU.map(m=>m.split("·")[1]))].filter(sk=>LT_RX[sk]);
+  const rxRows=rxSkills.length?rxSkills.map(sk=>`<tr>
+      <td style="${td}font-weight:800">${sk}</td><td style="${td}">${LT_RX[sk][0]}</td>
+      <td style="${td}text-align:center;font-weight:800;color:#A2673F">${LT_RX[sk][1]}일차~</td></tr>`).join("")
+    :`<tr><td style="${td}" colspan="3">보충이 필요한 유형이 없어요. 골고루 안정적입니다 👏</td></tr>`;
+  /* 5. 로드맵 + 체크박스 */
+  const cb=`<span style="display:inline-block;width:11px;height:11px;border:1.4px solid #B9B2A2;border-radius:3px;margin:0 2px;vertical-align:-1px"></span>`;
   const weeks=[0,1,2,3].map(i=>{ const d0=Math.min(96,rec+i*5), d1=Math.min(100,d0+4), u=Math.floor((d0-1)/10);
-    return `<tr><td style="padding:7px 10px;border:1px solid #E8E3D8;font-weight:800">${i+1}주차</td>
-      <td style="padding:7px 10px;border:1px solid #E8E3D8">${d0}~${d1}일차</td>
-      <td style="padding:7px 10px;border:1px solid #E8E3D8">${MU[u]}</td>
-      <td style="padding:7px 10px;border:1px solid #E8E3D8">${KU[u]}</td>
-      <td style="padding:7px 10px;border:1px solid #E8E3D8">${EU[u]}</td></tr>`; }).join("");
-  const reviewRows=review.slice(0,8).map(r=>`<div class="kitem" style="margin:6px 0;font-size:13px">
-    <b style="color:#B03A52">[${r.s}·${r.skill}]</b> ${r.q} → 정답: <b>${r.a}</b></div>`).join("");
+    return `<tr><td style="${td}font-weight:800;text-align:center">${i+1}주</td>
+      <td style="${td}text-align:center">${d0}~${d1}일차</td>
+      <td style="${td}">${MU[u]}</td><td style="${td}">${KU[u]}</td><td style="${td}">${EU[u]}</td>
+      <td style="${td}text-align:center;white-space:nowrap">${cb.repeat(5)}</td></tr>`; }).join("");
+  const strong=okU.slice(0,10).map(m=>`<span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;border:1.2px solid #BFE0CC;color:#1F7A4D;background:#F1F9F4;display:inline-block;margin:2px">${m}</span>`).join("");
+  const weak=missU.map(m=>`<span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;border:1.2px solid #EBC4CC;color:#B03A52;background:#FBF2F4;display:inline-block;margin:2px">${m}</span>`).join("");
   return `<div class="paper" style="--sc:var(--parent)">
     <div class="phead"><div class="pday" style="background:var(--parent)"><b>진단</b><span>리포트</span></div>
-      <div class="pt"><div class="pk" style="color:var(--parent)">LEVEL TEST REPORT · ${todayStr()}</div>
-        <div class="pu">${S.name||"우리 아이"} 학습 수준 진단 결과</div></div>
-      <div class="pm">우리집 유치원<br>100일 학습 프로그램</div></div>
-    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">1</span>수준 프로파일 (7단계)</div>${bars}</div>
-    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">2</span>과목별 해석</div>${comments}</div>
-    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">3</span>강점과 보충 포인트</div>
-      <div style="font-size:12.5px;font-weight:800;color:#1F7A4D;margin:6px 0 3px">잘하는 유형</div><div>${okChips||"—"}</div>
-      <div style="font-size:12.5px;font-weight:800;color:#B03A52;margin:10px 0 3px">보충이 필요한 유형</div><div>${missChips||"— 없음, 골고루 우수해요"}</div></div>
-    ${review.length?`<div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">4</span>오답 리뷰</div>${reviewRows}</div>`:""}
-    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">${review.length?5:4}</span>추천 4주 학습 로드맵 — ${rec}일차부터 (주 5일)</div>
-      <table style="border-collapse:collapse;width:100%;font-size:13px;margin-top:6px">
-        <tr style="background:#F7F4EE"><th style="padding:7px 10px;border:1px solid #E8E3D8">주차</th><th style="padding:7px 10px;border:1px solid #E8E3D8">진도</th><th style="padding:7px 10px;border:1px solid #E8E3D8">수학</th><th style="padding:7px 10px;border:1px solid #E8E3D8">국어</th><th style="padding:7px 10px;border:1px solid #E8E3D8">영어</th></tr>${weeks}</table></div>
-    <div class="pfoot"><span>상담 메모 <span class="uline" style="min-width:180px"></span></span>
-      <span class="mark">우리집 유치원 · 레벨 테스트 리포트</span></div></div>`;
+      <div class="pt"><div class="pk" style="color:var(--parent)">ADAPTIVE LEVEL TEST REPORT · ${todayStr()}</div>
+        <div class="pu">${S.name||"우리 아이"} 학습 수준 정밀 진단</div></div>
+      <div class="pm" style="text-align:center">
+        <div style="font-size:26px;font-weight:800;color:var(--parent);line-height:1.1">${gl}</div>
+        <div style="font-size:10.5px;font-weight:700">${gd}</div></div></div>
+    <div class="ws-guide"><div class="gt">검사 개요</div>
+      <ul><li>적응형 계단식 검사(성인 시력검사와 동일한 원리): 정답 시 상승·오답 시 하강하며 수렴 지점을 측정</li>
+      <li>과목당 8문항 · 총 ${qlog.length}문항 · 같은 단계 2회 이상 정답 시에만 해당 단계 인정(요행 배제)</li>
+      <li>측정 범위: 1단계(만 4세 기초) ~ 7단계(초등 1학년 상위 선행)</li></ul></div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">1</span>수준 프로파일과 측정 궤적</div>${bars}${trajRow}</div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">2</span>전체 문항 기록 (${qlog.length}문항)</div>
+      <table style="border-collapse:collapse;width:100%;font-size:11.5px;margin-top:4px">
+        <tr><th style="${th}">번호</th><th style="${th}">과목</th><th style="${th}">단계</th><th style="${th}">유형</th><th style="${th}">문항</th><th style="${th}">정오</th><th style="${th}">정답(오답 시)</th></tr>${logRows}</table></div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">3</span>유형별 정오 분석</div>
+      <table style="border-collapse:collapse;width:100%;font-size:12px;margin-top:4px">
+        <tr><th style="${th}">과목</th><th style="${th}">유형</th><th style="${th}">기록(●정답 ○오답)</th><th style="${th}">정답률</th><th style="${th}">판정</th></tr>${tallyRows}</table>
+      <div style="margin-top:9px"><span style="font-size:11.5px;font-weight:800;color:#1F7A4D">강점 유형</span><br>${strong||"—"}</div>
+      <div style="margin-top:7px"><span style="font-size:11.5px;font-weight:800;color:#B03A52">보충 유형</span><br>${weak||"— 없음"}</div></div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">4</span>과목별 해석과 가정 지도 처방</div>
+      ${comments}
+      <table style="border-collapse:collapse;width:100%;font-size:12px;margin-top:8px">
+        <tr><th style="${th}">보충 유형</th><th style="${th}">가정 지도 포인트</th><th style="${th}">교재 연계</th></tr>${rxRows}</table></div>
+    <div class="ws-section"><div class="ws-st"><span class="sno" style="background:var(--parent)">5</span>추천 4주 학습 로드맵 — ${rec}일차부터 (주 5일 · 하루 3장 15분)</div>
+      <table style="border-collapse:collapse;width:100%;font-size:12px;margin-top:4px">
+        <tr><th style="${th}">주차</th><th style="${th}">진도</th><th style="${th}">수학</th><th style="${th}">국어</th><th style="${th}">영어</th><th style="${th}">완료 체크</th></tr>${weeks}</table>
+      <div style="font-size:11.5px;color:#726c62;font-weight:600;margin-top:7px">※ 4주 후 레벨 테스트를 다시 하면 성장 그래프를 비교할 수 있어요. 보충 유형은 도전 퀴즈에서 자동으로 더 자주 출제됩니다.</div></div>
+    <div class="pfoot"><span>학부모 확인 <span class="uline" style="min-width:110px"></span> &nbsp; 상담 메모 <span class="uline" style="min-width:150px"></span></span>
+      <span class="mark">우리집 유치원 · 적응형 레벨 테스트</span></div></div>`;
 }
 /* ===== Sticker board ===== */
 const STICKERS=["🦄","🐬","🦁","🚀","🌈","🐼","🦖","🎠","🐳","🦋","🍭","🎪","🐧","🌟","🦩","🎨","🐢","🎁","🦉","⚡","🧸","🎯","👑","🏆"];
