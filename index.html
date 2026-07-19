@@ -961,34 +961,49 @@ function ltOpt(ch){ if(ch.emoji) return `<span class="oe">${ch.show}</span>`;
 function renderLevel(){
   const prev=S.level?`<p style="font-weight:700;color:var(--ink-2);font-size:13.5px;margin-top:16px">지난 결과 (${S.level.date}) · 수학 Lv${S.level.m} · 국어 Lv${S.level.k} · 영어 Lv${S.level.e} → <b>${S.level.rec}일차</b> 추천</p>`:"";
   secBody.innerHTML=`<div class="lvl-intro"><div class="big">🧭</div><h2>우리 아이 레벨 테스트</h2>
-    <p>수학 · 국어 · 영어를 각 <b>7단계 × 2문제 검증</b>으로 진단해요.<br>
-    만 4세 기초부터 <b>초등 1학년 선행</b>까지 폭넓게 측정하고,<br>
-    끝나면 또래 대비 수준 · 오답 리뷰 · <b>4주 학습 로드맵 리포트</b>가 나와요.<br>
-    <b>약 5~8분</b> · 잘할수록 문제가 많아져요</p>
+    <p>시력 검사처럼 <b>맞히면 어려워지고, 틀리면 쉬워지는</b> 적응형 검사예요.<br>
+    중간 단계에서 시작해 오르내리다가 딱 맞는 수준에서 멈춰요.<br>
+    만 4세 기초부터 <b>초등 1학년 선행</b>(7단계)까지 측정하고,<br>
+    또래 대비 수준 · 오답 리뷰 · <b>4주 학습 로드맵 리포트</b>가 나와요.<br>
+    <b>과목당 8문제 · 약 4~6분</b></p>
     <button class="pill accent" id="ltStart" style="--ac:#0F87A8">테스트 시작하기</button>${prev}</div>`;
   document.getElementById("ltStart").onclick=runLT;
 }
 function runLT(){
+  /* 적응형 계단식 측정: 3단계 시작, 맞히면 +1 / 틀리면 -1, 과목당 8문제.
+     마지막 5문제가 오간 단계의 평균 = 수렴 레벨 (시력검사 방식) */
   const order=[{k:"m",label:"수학",color:"var(--math)",g:ltMath},
                {k:"k",label:"국어",color:"var(--korean)",g:ltKor},
                {k:"e",label:"영어",color:"var(--english)",g:ltEng}];
+  const QN=8, START=3, MAXL=7;
   const res={m:0,k:0,e:0}; const missed=[]; const okSkills=[]; const review=[];
-  let si=0,lvl=1,okN=0,ngN=0,qn=0;
-  const TOTALQ=36;
+  let si=0, lvl=START, asked=0, hist=[], qn=0;
+  const TOTALQ=QN*order.length;
   secBody.innerHTML=`<div class="stage"><div class="progress"><div class="bar" style="background:#0F87A8"></div></div>
     <div class="pmeta"><span class="lvl-sub"><span class="dot" id="ltDot"></span><span id="ltSub"></span></span></div>
     <div class="qb"></div></div>`;
   const bar=secBody.querySelector(".bar"), qb=secBody.querySelector(".qb"),
         subEl=document.getElementById("ltSub"), dotEl=document.getElementById("ltDot");
+  function estimate(){
+    /* 판정: 그 단계 문제를 2번 이상 맞힌 최고 단계 (1번뿐이면 요행 가능성 → 미인정) */
+    const c={}; hist.forEach(h=>{ if(h.ok) c[h.l]=(c[h.l]||0)+1; });
+    for(let L=MAXL;L>=1;L--) if((c[L]||0)>=2) return L;
+    for(let L=MAXL;L>=1;L--) if((c[L]||0)>=1) return L;
+    return 1;
+  }
+  function nextSubject(){
+    res[order[si].k]=estimate();
+    si++; lvl=START; asked=0; hist=[];
+  }
   function ask(){
     if(si>=order.length) return finish();
     const sub=order[si]; qn++;
     bar.style.width=(Math.min(qn-1,TOTALQ)/TOTALQ*100)+"%";
     dotEl.style.background=sub.color;
-    subEl.textContent=`${sub.label} · ${lvl}단계`;
+    subEl.innerHTML=`${sub.label} · ${lvl}단계 &nbsp;<span style="letter-spacing:1px;color:var(--ink-3)">${"●".repeat(lvl)}${"○".repeat(MAXL-lvl)}</span>`;
     let p=null;
     for(let t=0;t<5&&!p;t++){ try{ p=sub.g(lvl); }catch(e){ console.error("LT gen fail",sub.k,lvl,e); } }
-    if(!p){ si++; lvl=1; okN=0; ngN=0; return ask(); }   /* 생성 실패 시 다음 과목으로 — 멈춤 방지 */
+    if(!p){ nextSubject(); return ask(); }   /* 생성 실패 시 과목 넘김 — 멈춤 방지 */
     const row=p.rowEmojis?`<div class="q-row">${p.rowEmojis.map(e=>`<span>${e}</span>`).join("")}</div>`:"";
     const psg=p.passage?`<div class="passage" style="max-width:540px;margin:16px auto 0;text-align:left;font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink)">${p.passage}</div>`:"";
     qb.innerHTML=row+psg+`<div class="q-text"${p.passage?' style="font-size:24px;margin-top:14px"':''}>${p.text}</div><div class="q-choices${p.choices.length===2?" two":""}"></div>`;
@@ -996,17 +1011,20 @@ function runLT(){
     const wrap=qb.querySelector(".q-choices");
     p.choices.forEach(ch=>{ const b=document.createElement("button"); b.className="opt"; b.innerHTML=ltOpt(ch);
       b.onclick=()=>{ [...wrap.children].forEach(x=>x.disabled=true);
-        if(ch.ok){ b.classList.add("right"); confetti(); speak("딩동댕!"); okN++;
-          okSkills.push(`${sub.label}·${p.skill}`); }
-        else { b.classList.add("wrong"); speak("괜찮아요!"); ngN++;
+        hist.push({l:lvl,ok:ch.ok}); asked++;
+        if(ch.ok){ b.classList.add("right"); confetti(); speak("딩동댕!");
+          okSkills.push(`${sub.label}·${p.skill}`);
+          lvl=Math.min(MAXL,lvl+1); }
+        else { b.classList.add("wrong"); speak("괜찮아요!");
           missed.push(`${sub.label}·${p.skill}`);
           const correct=p.choices.find(c=>c.ok);
           review.push({s:sub.label,skill:p.skill,q:p.text.replace(/<[^>]*>/g,"").slice(0,50),a:correct?correct.show:""});
-          [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.classList.add("right"); }); }
-        if(okN>=2){ res[sub.k]=lvl; lvl++; okN=0; ngN=0; if(lvl>7){ si++; lvl=1; } }
-        else if(ngN>=2){ si++; lvl=1; okN=0; ngN=0; }
+          [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.classList.add("right"); });
+          lvl=Math.max(1,lvl-1); }
+        if(asked>=QN) nextSubject();
         setTimeout(ask,1000); };
       wrap.appendChild(b); });
+    if(window.__LT_DEBUG) [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.dataset.ok="1"; });
   }
   function finish(){
     bar.style.width="100%";
