@@ -531,12 +531,15 @@ function callName(n){
    weakKeys: 도전 퀴즈에서 더 자주 낼 유형 (GENS 키: add/sub/make10/two/antonym/riddle/pattern/compare/ordinal)
    note: 홈·문제집에 표시할 맞춤 안내 문구 */
 const CHILD_CFG={
-  /* 2026-07-19 다현이 진단 반영: 국어 Lv3(맞춤법·문장만들기가 경계), 수학 Lv2(10만들기·세수 보충) */
-  startDay:11,                         /* 120일 재편 기준: 11일차(한 자리 뺄셈·10 짝꿍)부터 — 맞춤 C코스 완주 후 */
-  weakKeys:["add","make10","spell","sentence"],  /* 도전 퀴즈 가중: 덧셈·10만들기·맞춤법·문장 */
-  excludeKeys:["two"],                 /* 도전 퀴즈에서 두 자리 제외 (아직 어려움) */
-  mathModes:["count","add","sub","make10"],      /* 수학 탭: 그림세기→덧셈→뺄셈→10만들기 (두자리 숨김) */
-  note:"다현이 맞춤 — 수학은 ‘합이 10까지의 덧셈’부터 차근차근! 국어는 맞춤법·문장 만들기가 다음 목표예요.",
+  /* 2026-07-19 다현이 재교정: 부모 관찰(손가락으로 한 자리 덧셈, 합≤10) 우선 — 진단 Lv2는 과대평가로 판단.
+     맨 처음부터 '수 세기 + 합이 9까지 덧셈'으로 시작 */
+  startDay:1,                          /* 1일차(수 세기·합≤9 덧셈)부터 — 진짜 기초부터 */
+  lockDefault:false,                   /* 단계 잠금 기본 꺼짐(부모님 화면에서 켤 수 있음) */
+  courseFixed:1,                       /* 과정 고정: 씨앗(1) — 실력이 붙으면 부모님 화면에서 올림 */
+  weakKeys:["count","add","make10"],   /* 도전 퀴즈 가중: 세기·덧셈·10만들기 */
+  excludeKeys:["two","sub"],           /* 도전 퀴즈에서 두 자리·뺄셈 제외 (아직 이름) */
+  mathModes:["count","add","make10"],  /* 수학 탭: 그림세기→덧셈→10만들기 (뺄셈·두자리 숨김) */
+  note:"다현이 맞춤 — 손가락으로 세는 것부터 칭찬! 수학은 ‘세기 → 합이 10까지 덧셈’만 천천히. 준비되면 부모님 화면에서 난이도를 올려요.",
   testOrder:["k","m"],                 /* 레벨테스트: 국어 → 수학 (영어 제외) */
   testStart:{k:2,m:1},                 /* 시작 단계: 국어 2, 수학 1 (성공 경험 먼저) */
   hideEnglish:true,                    /* 홈 메뉴에서 영어 숨김 */
@@ -1644,6 +1647,8 @@ function renderParent(){
         <span class="seg" id="sndSeg"><button data-s="1">켜기</button><button data-s="0">끄기</button></span></div>
       <div class="setrow"><span class="sl">단계 순서 잠금 <span style="font-size:11.5px;color:var(--ink-3)">(완료해야 다음 단계가 열려요)</span></span>
         <span class="seg" id="lockSeg"><button data-l="1">잠금</button><button data-l="0">자유</button></span></div>
+      <div class="setrow"><span class="sl">학습 과정 <span style="font-size:11.5px;color:var(--ink-3)">(실력이 붙으면 위로 · 아이가 못 바꾸게 여기 있어요)</span></span>
+        <span class="seg" id="courseSeg">${[1,2,3].map(c=>`<button data-cs="${c}">${COURSE_NAMES[c].replace(" 과정","")}</button>`).join("")}</span></div>
     </div>
     <div class="panelbox"><h3>☁️ 기기 연동 — 가족 코드</h3>
       ${!supaOK()
@@ -1675,12 +1680,15 @@ function renderParent(){
   const dseg=document.getElementById("diffSeg");
   const paint=()=>{ [...dseg.children].forEach(b=>b.classList.toggle("on",b.dataset.d===S.diff));
     [...sseg.children].forEach(b=>b.classList.toggle("on",(b.dataset.s==="1")===S.sound));
-    [...lseg.children].forEach(b=>b.classList.toggle("on",(b.dataset.l==="1")===!S.freeNav)); };
+    [...lseg.children].forEach(b=>b.classList.toggle("on",(b.dataset.l==="1")===!S.freeNav));
+    [...cseg.children].forEach(b=>b.classList.toggle("on",Number(b.dataset.cs)===(S.course||1))); };
   [...dseg.children].forEach(b=>b.onclick=()=>{ S.diff=b.dataset.d; S.diffCustom=true; save(); paint(); });
   const sseg=document.getElementById("sndSeg");
   [...sseg.children].forEach(b=>b.onclick=()=>{ S.sound=b.dataset.s==="1"; save(); paint(); refreshSoundBtn(); });
   const lseg=document.getElementById("lockSeg");
   [...lseg.children].forEach(b=>b.onclick=()=>{ S.freeNav=b.dataset.l!=="1"; save(); paint(); });
+  const cseg=document.getElementById("courseSeg");
+  [...cseg.children].forEach(b=>b.onclick=()=>{ S.course=Number(b.dataset.cs); save(); paint(); refreshHero(); });
   paint();
   let resetArm=false;
   document.getElementById("resetBtn").onclick=e=>{
@@ -1827,8 +1835,22 @@ function mathPaper(d){
       if(WCOURSE===2){ const a=wrnd(4,9),b=wrnd(3,9); return P(`${a} + ${b}`,a+b); }
       const a=wrnd(1,late?6:5),b=wrnd(1,Math.min(late?8:4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
     B=wsec("2",WCOURSE===1?"합이 9까지의 덧셈":(WCOURSE===2?"받아올림 복습 덧셈":"두 자리 덧셈 복습"),"빈칸에 답을 쓰세요.",mrows(add,true)); ansB=ansline(add);
-    const w=wordProblems(2,WCOURSE===1?mkAddW(2,5,1,4):mkAddW(5,12,4,9));
-    C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); ansC="문장제: 위 정답 참고";
+    /* 씨앗 과정: 3번째 섹션을 날짜별로 다양하게 (수 가르기·순서·크기 — 기초 수 감각 워크북) */
+    if(WCOURSE===1){
+      const f=d%4;
+      if(f===0){ const items=uniqN(6,()=>{ const n=wrnd(3,9); return {q:`${"🍬".repeat(n)} 은 모두 몇 개? → `,a:n}; },x=>x.q);
+        C=wsec("3","또 세어 볼까요?","사탕을 세어 수를 써 보세요.",mrows(items)); ansC=ansline(items); }
+      else if(f===1){ const items=uniqN(6,()=>{ const n=wrnd(2,9); return WR()<.5?{q:`${n} 다음 수는 → `,a:n+1}:{q:`${n} 바로 앞의 수는 → `,a:n-1}; },x=>x.q);
+        C=wsec("3","수의 순서","다음 수와 앞의 수를 써 보세요.",mrows(items)); ansC=ansline(items); }
+      else if(f===2){ const items=uniqN(5,()=>{ let a=wrnd(1,9),b=wrnd(1,9); while(a===b)b=wrnd(1,9);
+          return {q:`${a} 와 ${b} 중 더 큰 수에 ○ → `,a:Math.max(a,b)}; },x=>x.q);
+        C=wsec("3","더 큰 수 찾기","두 수 중 더 큰 수를 쓰세요.",mrows(items)); ansC=ansline(items); }
+      else { const bonds=uniqN(6,()=>{ const n=wrnd(3,9),g=wrnd(1,n-1); return {q:`${n} 은 ${g} 하고 ▢ → `,a:n-g}; },x=>x.q);
+        C=wsec("3","수 가르기","▢에 알맞은 수를 쓰세요. (예: 5는 2하고 3)",mrows(bonds)); ansC=ansline(bonds); }
+    } else {
+      const w=wordProblems(2,mkAddW(5,12,4,9));
+      C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); ansC="문장제: 위 정답 참고";
+    }
   }
   if(u===1){ /* 한 자리 뺄셈과 10 짝꿍 */
     const sub=uniqN(8,()=>{ const a=wrnd(2,9),b=wrnd(1,a); return P(`${a} − ${b}`,a-b); },x=>x.q);
@@ -2756,14 +2778,10 @@ function renderBook(){
   const cfgNote=CHILD_CFG.note?`<br>💡 <b>맞춤 안내</b> — ${CHILD_CFG.note}`:"";
   const cur=S.course||1;
   secBody.innerHTML=`<div class="book-intro">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <b style="font-size:15px;color:var(--ink)">학습 과정</b>
-      <span class="seg" id="courseSeg">${[1,2,3].map(c=>
-        `<button data-cs="${c}" class="${cur===c?"on":""}">${c}단계 ${COURSE_NAMES[c]}</button>`).join("")}</span>
-      <span style="font-size:12px;color:var(--ink-3);font-weight:700">과정마다 120일 · 3개 과정 = 2027년 말까지</span></div>
     📚 <b>${COURSE_NAMES[cur]} 120일</b> — 하루 <b>4장(수학·국어·영어·탐구)</b>씩, 10일마다 단원이 올라가요.
-    🔍 <b>탐구</b>는 사회·과학 개념을 쉽게 풀어낸 전집형 학습지예요(36가지 주제).
+    🔍 <b>탐구</b>는 사회·과학 개념을 쉽게 풀어낸 전집형 학습지예요(60가지 주제).
     같은 일차는 항상 같은 문제, <b>새 문제</b>는 숫자만 바뀐 복습용이에요.${reco}${cfgNote}
+    <br><span style="font-size:12px;color:var(--ink-3)">🌱 지금은 가장 쉬운 <b>씨앗 과정</b>이에요. 실력이 붙으면 <b>부모님 화면</b>에서 다음 과정을 열 수 있어요.</span>
     <div style="margin-top:10px"><button class="pill accent" id="printWeek" style="--ac:var(--book)">🖨 이번 주 5일치 한 번에 인쇄</button></div>
     <br><span style="font-size:12.5px">🖨 인쇄 버튼을 누르면 <b>깨끗한 인쇄용 화면이 새 창</b>으로 열려요 — 머리글·바닥글 없이 학습지만 나옵니다. (팝업 허용이 필요할 수 있어요)</span></div>
     <div class="unit" style="border-color:color-mix(in srgb,var(--korean) 40%, var(--line));background:color-mix(in srgb,var(--korean) 3%, var(--surface))">
@@ -2775,8 +2793,6 @@ function renderBook(){
         return `<button class="daychip${st}" data-c="${i}" style="border-color:color-mix(in srgb,var(--korean) 45%, var(--line));color:var(--korean)">${isDone(k)?"✓C"+(i+1):(isLocked(k)?"🔒":"C"+(i+1))}</button>`; }).join("")}</div></div>
     <div id="unitList"></div>`;
   secBody.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>openCustomDay(Number(b.dataset.c)));
-  document.querySelectorAll("#courseSeg button").forEach(b=>b.onclick=()=>{
-    S.course=Number(b.dataset.cs); save(); renderBook(); refreshHero(); });
   document.getElementById("printWeek").onclick=()=>{
     const tasks=taskSeq().filter(t=>!isDone(t.key)).slice(0,5); let html="";
     tasks.forEach(t=>{ html+= t.type==="c" ? ccPapers(t.i).join("") : dayPapers(t.i).join(""); });
@@ -3044,10 +3060,17 @@ window.addEventListener("afterprint",()=>{
   document.body.classList.remove("print-ws");
 });
 
+/* ===== 재교정 마이그레이션(한 번만): 과정 씨앗 고정 + 잠금 해제 ===== */
+if((S.ver||0) < 4){
+  if(CHILD_CFG.courseFixed) S.course=CHILD_CFG.courseFixed;
+  S.freeNav = !CHILD_CFG.lockDefault ? true : false;
+  S.ver=4;
+}
+if(CHILD_CFG.mathDiff&&!S.diffCustom){ S.diff=CHILD_CFG.mathDiff; }   /* 맞춤 기본 난이도 (부모가 직접 바꾸면 유지) */
+
 /* ===== 시작: 현재 주소(#해시)의 화면 복원 + 클라우드 기록 불러오기 ===== */
 route();
-if(CHILD_CFG.mathDiff&&!S.diffCustom){ S.diff=CHILD_CFG.mathDiff; }   /* 맞춤 기본 난이도 (부모가 직접 바꾸면 유지) */
-if(supaOK()&&!S.fam){ S.fam=genFamCode(); save(); }   /* 첫 실행 시 가족 코드 자동 생성 → 자동 동기화 */
+if(supaOK()&&!S.fam){ S.fam=genFamCode(); save(); } else save();   /* 첫 실행 시 가족 코드 자동 생성 → 자동 동기화 */
 syncPull().then(ok=>{ if(ok){ refreshHero(); renderSetup(); } });
 </script>
 </body>
