@@ -2388,6 +2388,32 @@ function paperShell(d,subj,color,subjLabel,unitTitle,guide,inner,ansHtml){
       <span class="mark">우리집 유치원 · 120일 학습</span></div>
     <div class="ansbox"><div class="at">정답 (부모용)</div><div class="al">${ansHtml}</div></div></div>`;
 }
+/* 어제 복습 장 — 망각곡선 대응: 전날 배운 것을 다음 날 한 번 더 (새 숫자로) */
+function reviewPaper(pd){
+  WCOURSE=S.course||1;
+  WR=mulberry32(pd*7919+888888+(REROLL["r"+pd]||0)*7717);
+  const u=Math.floor(pd/10);
+  const m=quickMix(u,10);
+  const A=wsec("1","어제 수학 다시 풀기",`${pd+1}일차 「${MU[u]}」 — 숫자만 바뀐 복습이에요.`,mrows(m,true));
+  const kb=wsample(ANTONYMS,3).map(([a,b])=>({q:`${a} ↔ `,a:b}))
+    .concat(wsample(COUNTERS,2).map(([a,b])=>({q:`${a} `,a:b})));
+  const B=wsec("2","어제 국어 낱말 복습","빈칸에 알맞은 말을 쓰세요.",
+    kb.map((it,x)=>`<div class="kitem"><span class="no">${x+1}</span>${it.q}<span class="uline" style="min-width:80px"></span><span class="ans"> ${it.a}</span></div>`).join(""));
+  const ew=wsample(CVC,2);
+  const C=wsec("3","어제 영어 단어 쓰기","단어를 소리 내어 읽고 따라 쓰세요.",
+    ew.map(w2=>`<div class="erow" style="border:none;padding:2px 0"><span class="eE" style="margin:0 8px 0 0">${w2[1]}</span></div>`+traceRow(w2[0])).join(""));
+  const tp=TAMGU[(pd+(WCOURSE-1)*13)%TAMGU.length];
+  const tq=wsample(tp.quiz,2);
+  const D=wsec("4",`어제 탐구 「${tp.t}」 기억나요?`,"알맞은 말에 ○ 하세요.",
+    tq.map((q,x)=>`<div class="kitem"><span class="no">${x+1}</span>${q[0]}<span class="ans"> → ${q[1]}</span></div>`).join(""));
+  const out=paperShell(pd,"rev","var(--think)","복습",`어제(${pd+1}일차) 한 번 더!`,
+    {c:"어제 배운 것을 오늘 한 번 더 만나면 오래 기억돼요(망각곡선).",
+     t:["복습은 가볍게, 5분이면 충분해요.","다 기억하면 폭풍 칭찬! 잊었어도 괜찮아요, 그래서 복습하는 거예요."]},
+    A+B+C+D,
+    `<b>①</b> ${ansline(m)}<br><b>②</b> ${ansline(kb)}<br><b>③</b> 따라 쓰기<br><b>④</b> ${tq.map((q,x)=>`${x+1}) ${q[1]}`).join("&nbsp; ")}`);
+  WR=Math.random;
+  return out;
+}
 function dayPapers(d){
   WCOURSE=S.course||1;
   WR=mulberry32(d*7919+(REROLL[d]||0)*104729+(WCOURSE-1)*1000003+13);
@@ -2520,20 +2546,22 @@ function renderBook(){
 function openDay(d){ if(isLocked("d"+d)){ lockToast(); return; }
   if(location.hash==="#day/"+d) route(); else location.hash="day/"+d; }
 function openDayView(d){
+  const hasRev=d>0;   /* 전날 복습 장 자동 포함 (에빙하우스 망각곡선) */
+  const sheets=()=> (hasRev?[reviewPaper(d-1)]:[]).concat(dayPapers(d)).join("");
   secBody.innerHTML=`<div class="toolbar">
     <button class="pill" id="tBack">← 목록</button>
-    <button class="pill accent" id="tPrint" style="--ac:var(--book)">🖨 오늘 4장 인쇄</button>
+    <button class="pill accent" id="tPrint" style="--ac:var(--book)">🖨 오늘 ${hasRev?"5장(복습 포함)":"4장"} 인쇄</button>
     <button class="pill" id="tNew">🔄 새 문제</button>
     <button class="pill" id="tAns">✅ 정답 보기</button>
     <button class="pill accent" id="tDone" style="--ac:var(--ok)">${isDone("d"+d)?"✓ 완료됨":"🌟 오늘 학습 완료!"}</button></div>
     <div id="paperMount"></div>`;
   const mount=document.getElementById("paperMount");
-  const draw=()=>{ mount.innerHTML=dayPapers(d).join(""); };
+  const draw=()=>{ mount.innerHTML=sheets(); };
   draw();
   document.getElementById("tBack").onclick=()=>{ location.hash="sec/book"; };
-  document.getElementById("tNew").onclick=()=>{ REROLL[d]=(REROLL[d]||0)+1; draw(); };
+  document.getElementById("tNew").onclick=()=>{ REROLL[d]=(REROLL[d]||0)+1; if(hasRev) REROLL["r"+(d-1)]=(REROLL["r"+(d-1)]||0)+1; draw(); };
   document.getElementById("tAns").onclick=()=>{ mount.querySelectorAll(".paper").forEach(p=>p.classList.toggle("show-ans")); };
-  document.getElementById("tPrint").onclick=()=>doPrint(dayPapers(d).join(""));
+  document.getElementById("tPrint").onclick=()=>doPrint(sheets());
   document.getElementById("tDone").onclick=()=>showGradeBar("d"+d,"tDone",["수학","국어","영어","탐구"]);
 }
 /* ===== 🌸 다현이 맞춤 5일 코스 — 진단(국어 Lv3·수학 Lv2) 기반 브리지 커리큘럼 ===== */
