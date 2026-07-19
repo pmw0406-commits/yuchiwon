@@ -89,20 +89,26 @@
     border-radius:12px; background:var(--bg); color:var(--ink); width:150px; }
 
   /* ---------- menu ---------- */
-  .menu-label{ font-size:12px; font-weight:800; color:var(--ink-3); letter-spacing:2px; margin:0 2px 12px; }
-  .menu{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
-  .tile{ position:relative; border:1px solid var(--line); cursor:pointer; color:var(--ink); text-align:left;
-    background:var(--surface); border-radius:22px; padding:22px; display:flex; flex-direction:column; gap:14px;
-    box-shadow:var(--sh-s); transition:transform .18s, box-shadow .18s; min-height:140px; }
-  .tile:hover{ transform:translateY(-4px); box-shadow:var(--sh-m); }
+  .mgroup{ margin-bottom:28px; }
+  .menu-label{ display:flex; align-items:center; gap:12px; font-size:11.5px; font-weight:800; color:var(--ink-3);
+    letter-spacing:3px; margin:0 2px 13px; }
+  .menu-label::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .menu{ display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:13px; }
+  .tile{ border:1px solid var(--line); cursor:pointer; color:var(--ink); text-align:left;
+    background:var(--surface); border-radius:20px; padding:17px 20px; display:flex; flex-direction:row;
+    align-items:center; gap:16px; box-shadow:var(--sh-s); transition:transform .18s, box-shadow .18s, border-color .18s; }
+  .tile:hover{ transform:translateY(-3px); box-shadow:var(--sh-m); border-color:color-mix(in srgb, var(--tc) 30%, var(--line)); }
   .tile:hover .t-arrow{ opacity:1; transform:none; }
-  .tile .chip{ width:52px; height:52px; border-radius:16px; display:grid; place-items:center;
+  .tile .chip{ width:54px; height:54px; border-radius:17px; display:grid; place-items:center; flex:none;
     background:color-mix(in srgb, var(--tc) 11%, var(--surface)); color:var(--tc); }
   .tile .chip svg{ width:26px; height:26px; }
-  .tile .t-title{ font-size:18.5px; font-weight:800; letter-spacing:-.4px; }
-  .tile .t-en{ font-size:10.5px; font-weight:800; letter-spacing:1.8px; text-transform:uppercase; color:var(--ink-3); margin-top:-9px; }
-  .tile .t-desc{ font-size:13px; font-weight:600; color:var(--ink-2); margin-top:auto; }
-  .tile .t-arrow{ position:absolute; top:22px; right:20px; color:var(--tc); opacity:0; transform:translateX(-4px); transition:.18s; }
+  .tile .tx{ min-width:0; }
+  .tile .t-en{ font-size:10px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase;
+    color:var(--tc); margin-bottom:2px; line-height:1; }
+  .tile .t-title{ font-size:18.5px; font-weight:800; letter-spacing:-.4px; line-height:1.25; }
+  .tile .t-desc{ font-size:12.5px; font-weight:600; color:var(--ink-2); margin-top:3px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tile .t-arrow{ margin-left:auto; color:var(--tc); opacity:0; transform:translateX(-5px); transition:.18s; flex:none; }
 
   /* ---------- screens ---------- */
   .screen{ display:none; }
@@ -318,8 +324,7 @@
 
   @media (min-width:700px){
     body{ font-size:17px; }
-    .menu{ grid-template-columns:repeat(4,1fr); gap:16px; }
-    .tile{ min-height:158px; }
+    .menu{ grid-template-columns:repeat(2,1fr); gap:14px; }
     .opt{ min-height:120px; }
     .grid{ grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); }
   }
@@ -401,8 +406,7 @@
       </div>
     </div>
     <div id="setupMount"></div>
-    <div class="menu-label">학습 메뉴</div>
-    <div class="menu" id="menu"></div>
+    <div id="menu"></div>
     <footer>우리집 유치원 · 만 4~5세 선행 커리큘럼 · 하루 15분의 약속</footer>
   </section>
 
@@ -479,23 +483,31 @@ const IC={
   level:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15a7 7 0 0 1 14 0"/><path d="M12 15l3.8-3.8"/><path d="M4 19h16"/></svg>',
 };
 const MENU=[
-  {id:"korean",   title:"국어",     en:"Korean",   desc:"어휘력과 사고력을 키우는 낱말 놀이",  ac:"var(--korean)"},
-  {id:"math",     title:"수학",     en:"Math",     desc:"받아올림부터 두 자리 연산까지",      ac:"var(--math)"},
-  {id:"english",  title:"영어",     en:"English",  desc:"알파벳 음가와 첫 단어 익히기",       ac:"var(--english)"},
-  {id:"think",    title:"사고력",   en:"Logic",    desc:"규칙 찾기 · 수 비교 · 순서 추론",    ac:"var(--think)"},
-  {id:"challenge",title:"도전 퀴즈", en:"Challenge",desc:"약한 유형을 골라 내는 10문제 실전",  ac:"var(--quiz)"},
-  {id:"level",    title:"레벨 테스트", en:"Level Test",desc:"수준 진단 후 맞춤 시작점 추천",   ac:"#0F87A8"},
-  {id:"sticker",  title:"스티커판", en:"Reward",   desc:"별을 모아 완성하는 나만의 컬렉션",   ac:"var(--sticker)"},
-  {id:"book",     title:"문제집",   en:"Workbook", desc:"100일 커리큘럼 · 하루 3장 인쇄",     ac:"var(--book)"},
-  {id:"parent",   title:"부모님",   en:"Parents",  desc:"학습 리포트 · 약점 진단 · 설정",     ac:"var(--parent)"},
+  {id:"korean",   grp:"오늘의 학습", title:"국어",     en:"Korean",   desc:"어휘력과 사고력을 키우는 낱말 놀이",  ac:"var(--korean)"},
+  {id:"math",     grp:"오늘의 학습", title:"수학",     en:"Math",     desc:"받아올림부터 두 자리 연산까지",      ac:"var(--math)"},
+  {id:"english",  grp:"오늘의 학습", title:"영어",     en:"English",  desc:"알파벳 음가와 첫 단어 익히기",       ac:"var(--english)"},
+  {id:"think",    grp:"오늘의 학습", title:"사고력",   en:"Logic",    desc:"규칙 찾기 · 수 비교 · 순서 추론",    ac:"var(--think)"},
+  {id:"challenge",grp:"도전과 보상", title:"도전 퀴즈", en:"Challenge",desc:"약한 유형을 골라 내는 10문제 실전",  ac:"var(--quiz)"},
+  {id:"level",    grp:"도전과 보상", title:"레벨 테스트", en:"Level Test",desc:"수준 진단 후 맞춤 시작점 추천",   ac:"#0F87A8"},
+  {id:"sticker",  grp:"도전과 보상", title:"스티커판", en:"Reward",   desc:"별을 모아 완성하는 나만의 컬렉션",   ac:"var(--sticker)"},
+  {id:"book",     grp:"문제집 · 학부모", title:"문제집",   en:"Workbook", desc:"100일 커리큘럼 · 하루 3장 인쇄",     ac:"var(--book)"},
+  {id:"parent",   grp:"문제집 · 학부모", title:"부모님",   en:"Parents",  desc:"학습 리포트 · 약점 진단 · 설정",     ac:"var(--parent)"},
 ];
 const menuEl=document.getElementById("menu");
-MENU.forEach(m=>{ const b=document.createElement("button"); b.className="tile"; b.style.setProperty("--tc",m.ac);
-  b.innerHTML=`<div class="chip">${IC[m.id]}</div>
-    <div><div class="t-title">${m.title}</div><div class="t-en">${m.en}</div></div>
-    <div class="t-desc">${m.desc}</div>
-    <span class="t-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
-  b.onclick=()=>openSection(m); menuEl.appendChild(b); });
+{ let curGrp=null, grid=null;
+  MENU.forEach(m=>{
+    if(m.grp!==curGrp){ curGrp=m.grp;
+      const g=document.createElement("div"); g.className="mgroup";
+      g.innerHTML=`<div class="menu-label">${m.grp}</div>`;
+      grid=document.createElement("div"); grid.className="menu";
+      g.appendChild(grid); menuEl.appendChild(g); }
+    const b=document.createElement("button"); b.className="tile"; b.style.setProperty("--tc",m.ac);
+    b.innerHTML=`<div class="chip">${IC[m.id]}</div>
+      <div class="tx"><div class="t-en">${m.en}</div><div class="t-title">${m.title}</div><div class="t-desc">${m.desc}</div></div>
+      <span class="t-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+    b.onclick=()=>openSection(m); grid.appendChild(b);
+  });
+}
 
 /* ===== Greeting + first-run setup ===== */
 function refreshHero(){
