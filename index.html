@@ -1734,15 +1734,23 @@ function mkAddW(lo1,hi1,lo2,hi2){ return ()=>{ const [t,u]=wpick(ADD_T), a=wrnd(
 function mkSubW(lo1,hi1,maxSub){ return ()=>{ const [t,u]=wpick(SUB_T), a=wrnd(lo1,hi1), b=wrnd(1,Math.min(maxSub,a-1));
   return {q:t.replace("{N}",nameJosa(pickName())).replace("{a}",a).replace("{b}",b), a:a-b, u}; }; }
 
+/* 빠른 복습 혼합(모든 수학 지면 4번째 섹션 — 구몬식 누적 반복) */
+function quickMix(u,n){
+  return uniqN(n,()=>{ const f=u===0?0:wrnd(0,Math.min(3,u));
+    if(f===0){ const a=wrnd(1,5),b=wrnd(1,Math.min(4,9-a)); return P(`${a} + ${b}`,a+b); }
+    if(f===1){ const a=wrnd(3,9),b=wrnd(1,a-1); return P(`${a} − ${b}`,a-b); }
+    if(f===2){ const a=wrnd(5,9),b=wrnd(Math.max(2,11-a),9); return P(`${a} + ${b}`,a+b); }
+    const a=wrnd(11,15),b=wrnd((a%10)+1,9); return P(`${a} − ${b}`,a-b); },x=>x.q);
+}
 /* ---- 수학 페이지 (12단원 스몰스텝) ---- */
 function mathPaper(d){
   const u=Math.floor(d/10), late=(d%10)>=5;
   let A="",B="",C="", ansA="",ansB="",ansC="";
   if(u===0){ /* 수 세기와 덧셈 — 과정별 상향(씨앗 합≤9 / 새싹 받아올림 / 열매 두 자리) */
     const cmax=WCOURSE===1?9:12;
-    const cnt=uniqN(6,()=>{ const n=wrnd(2,cmax),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
+    const cnt=uniqN(8,()=>{ const n=wrnd(2,cmax),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
     A=wsec("1","그림 세기","그림을 하나씩 세어 ▢에 수를 쓰세요.",mrows(cnt)); ansA=ansline(cnt);
-    const add=uniqN(late?10:8,()=>{
+    const add=uniqN(12,()=>{
       if(WCOURSE===3){ const t=wrnd(1,7),o=wrnd(0,4),b=wrnd(1,9-o),n=t*10+o; return P(`${n} + ${b}`,n+b); }
       if(WCOURSE===2){ const a=wrnd(4,9),b=wrnd(3,9); return P(`${a} + ${b}`,a+b); }
       const a=wrnd(1,late?6:5),b=wrnd(1,Math.min(late?8:4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
@@ -1889,8 +1897,10 @@ function mathPaper(d){
     const w=wordProblems(2,()=> (WR()<.5?mkAddW(11,30,11,25):mkSubW(20,40,15))() );
     C=wsec("3","도전 문장제","식을 쓰고 답을 구하세요.",w.join("")); ansC="문장제: 위 정답 참고";
   }
-  return paperShell(d,"math","var(--math)","수학",MU[u],MG[u],A+B+C,
-    `<b>①</b> ${ansA}<br><b>②</b> ${ansB}<br><b>③</b> ${ansC}`);
+  const rv=quickMix(u,6);
+  const D=wsec("4","오늘의 빠른 복습","앞에서 배운 것을 잊지 않게 한 번 더!",mrows(rv,true));
+  return paperShell(d,"math","var(--math)","수학",MU[u],MG[u],A+B+C+D,
+    `<b>①</b> ${ansA}<br><b>②</b> ${ansB}<br><b>③</b> ${ansC}<br><b>④</b> ${ansline(rv)}`);
 }
 
 /* ---- 국어 재료 ---- */
@@ -2040,8 +2050,10 @@ function writingSection(d,u){
 function korPaper(d){
   const u=Math.floor(d/10);
   const v=vocabSection(d,u), r=readingSection(d,u), w=writingSection(d,u);
-  return paperShell(d,"kor","var(--korean)","국어",KU[u],KG[u],v.html+r.html+w.html,
-    `<b>①</b> ${v.ans}<br><b>②</b> ${r.ans}<br><b>③</b> ${w.ans}`);
+  const x=wsec("4","나만의 문장","오늘 배운 낱말 하나를 골라 나만의 문장을 만들어 쓰세요.",
+    `<div class="writeline"></div><div class="writeline"></div>`);
+  return paperShell(d,"kor","var(--korean)","국어",KU[u],KG[u],v.html+r.html+w.html+x,
+    `<b>①</b> ${v.ans}<br><b>②</b> ${r.ans}<br><b>③</b> ${w.ans}<br><b>④</b> 자유 쓰기`);
 }
 
 /* ---- 영어 재료 ---- */
@@ -2074,7 +2086,7 @@ function engPaper(d){
   let u=Math.floor(d/10);
   if(WCOURSE>=2&&u<=5) u=6+u;   /* 새싹·열매 과정: 알파벳 대신 단어 가족·문장 회독 */
   if(u>11) u=11;
-  let A="",B="",C="",ansA="",ansB="",ansC="";
+  let A="",B="",C="",D="",ansA="",ansB="",ansC="";
   if(u<=4){
     const li=u*5+Math.floor((d%10)/2), L=LSOUND[Math.min(25,li)], up=L[0], lo=up.toLowerCase();
     A=wsec("1",`오늘의 알파벳 — ${up} ${lo} [${L[1]}]`,"글자 이름과 소리를 큰 소리로 세 번 읽으세요.",
@@ -2083,15 +2095,22 @@ function engPaper(d){
        ${L.slice(2).map(w=>`<span class="eW" style="margin-left:14px">${w[0]}<small>${w[1]}</small></span>`).join("")}</div>`);
     ansA="읽기 활동";
     B=wsec("2","쓰기 연습","진한 글자를 보고 흐린 글자를 따라 쓴 뒤, 혼자 써 보세요.",
-      traceRow(up)+traceRow(lo)+`<div class="writeline"></div>`);
+      traceRow(up)+traceRow(lo)+traceRow(L[2][0])+`<div class="writeline"></div>`);
     ansB="따라 쓰기 활동";
     const others="BCDFGHJKLMNPQRSTVWXYZ".replace(up,"").split("");
     const cells=wshuffle([up,up,up,lo,lo,lo].concat(Array.from({length:18},()=>{ const o=wpick(others); return WR()<.5?o:o.toLowerCase(); })));
-    const w1=L[2], miss=`${w1[1]} <span class="blank" style="min-width:30px"></span>${w1[0].slice(1).toLowerCase()}`;
+    const w1=L[2], w2=L[3], miss=`${w1[1]} <span class="blank" style="min-width:30px"></span>${w1[0].slice(1).toLowerCase()}`;
+    const miss2=`${w2[1]} <span class="blank" style="min-width:30px"></span>${w2[0].slice(1).toLowerCase()}`;
     C=wsec("3","글자 찾기","오늘의 글자(대·소문자)를 모두 찾아 ○ 하고, 빈칸에 첫 글자를 쓰세요.",
       `<div class="hunt">${cells.map(c=>`<span>${c}</span>`).join("")}</div>
-       <div class="efill" style="margin-top:8px">${miss}<span class="ans"> ${lo}</span></div>`);
+       <div class="efill" style="margin-top:8px">${miss}<span class="ans"> ${lo}</span></div>
+       <div class="efill">${miss2}<span class="ans"> ${lo}</span></div>`);
     ansC=`○ 6개 · 첫 글자 ${lo}`;
+    const prevs=[LSOUND[Math.max(0,Math.min(25,li)-1)],LSOUND[Math.max(0,Math.min(25,li)-2)]];
+    const connWords=[[L[2][0],L[2][1]],[prevs[0][2][0],prevs[0][2][1]],[prevs[1][3][0],prevs[1][3][1]]];
+    D=wsec("4","단어와 그림 잇기","단어를 읽고 알맞은 그림과 선으로 이으세요.",
+      `<div class="conn"><div>${connWords.map(p=>`<div style="border:none;padding:5px 0;font-size:18px;font-weight:800">${p[0]} ·</div>`).join("")}</div>
+       <div>${wshuffle(connWords).map(p=>`<div style="border:none;padding:5px 0;font-size:26px">· ${p[1]}</div>`).join("")}</div></div>`);
   } else if(u===5){ /* 대문자와 소문자 */
     const pairs=wsample(UPLOW,6);
     A=wsec("1","대문자와 소문자 짝","대문자를 보고 짝인 소문자를 쓰세요.",
@@ -2113,14 +2132,18 @@ function engPaper(d){
       `<div class="ladder">${words.map(w=>`<div class="li">${w[0][0]} + ${fam} = <b>${w[0]}</b><span class="fe">${w[1]}</span></div>`).join("")}</div>`);
     ansA="읽기 활동";
     B=wsec("2","단어 쓰기","단어를 읽으며 따라 쓰세요.",
-      words.slice(0,3).map(w=>traceRow(w[0])).join(""));
+      words.slice(0,Math.min(4,words.length)).map(w=>traceRow(w[0])).join(""));
     ansB="따라 쓰기 활동";
     const sw=SIGHTW[u], ss=SIGHT_SENT[u];
-    const fillw=wsample(words,2).map(w=>`<div class="efill">${w[1]} <span class="blank" style="min-width:30px"></span>${fam}<span class="ans"> ${w[0][0]}</span></div>`).join("");
+    const fillw=wsample(words,Math.min(3,words.length)).map(w=>`<div class="efill">${w[1]} <span class="blank" style="min-width:30px"></span>${fam}<span class="ans"> ${w[0][0]}</span></div>`).join("");
     C=wsec("3","사이트 워드와 문장","한눈에 읽는 단어를 익히고 문장을 따라 읽으세요.",
       `<div class="swbox">${sw.map(w=>`<span>${w}</span>`).join("")}</div>`+
       ss.map(s=>`<div class="kitem" style="font-size:17px;font-weight:700">✏️ ${s}</div><div class="writeline"></div>`).join("")+fillw);
     ansC="첫소리 채우기: 위 정답 참고";
+    const other=UNIT_FAMS[u][(fi+1)%UNIT_FAMS[u].length], ow=FAMS[other];
+    const dw=wsample(words.concat(ow),3);
+    D=wsec("4","그림 보고 단어 쓰기","그림을 보고 단어를 소리 내어 읽고 빈칸에 쓰세요.",
+      dw.map(w2=>`<div class="efill">${w2[1]} → <span class="uline" style="min-width:90px"></span><span class="ans"> ${w2[0]}</span></div>`).join(""));
   } else { /* u===11 사이트 워드와 문장 종합 */
     const sw=SIGHTW[11], ss=SIGHT_SENT[11];
     A=wsec("1","사이트 워드 복습","한눈에 읽는 단어를 큰 소리로 읽으세요.",
@@ -2134,8 +2157,13 @@ function engPaper(d){
       ss.map(s=>`<div class="kitem" style="font-size:17px;font-weight:700">✏️ ${s}</div><div class="writeline"></div>`).join(""));
     ansC="읽기·따라 쓰기 활동";
   }
-  return paperShell(d,"eng","var(--english)","영어",EU[u],EG[u],A+B+C,
-    `<b>①</b> ${ansA}<br><b>②</b> ${ansB}<br><b>③</b> ${ansC}`);
+  if(!D&&u===5){ const tr=wsample(UPLOW,3);
+    D=wsec("4","소문자 쓰기 연습","소문자만 골라 예쁘게 따라 쓰세요.",tr.map(p=>traceRow(p[1])).join("")); }
+  if(!D&&u===11){ const sw2=SIGHTW[11];
+    D=wsec("4","사이트 워드 쓰기","단어를 읽고 빈칸에 따라 쓰세요.",
+      wsample(sw2,3).map(w2=>`<div class="efill">${w2} → <span class="uline" style="min-width:80px"></span><span class="ans"> ${w2}</span></div>`).join("")); }
+  return paperShell(d,"eng","var(--english)","영어",EU[u],EG[u],A+B+C+D,
+    `<b>①</b> ${ansA}<br><b>②</b> ${ansB}<br><b>③</b> ${ansC}${D?"<br><b>④</b> 쓰기·잇기 활동":""}`);
 }
 
 /* ===== 🔍 세상 탐구 (사회·과학 개념 학습 — 전집 대체) ===== */
@@ -2337,7 +2365,10 @@ function tamguPaper(d){
   const inner=wsec("1","오늘의 개념 — 소리 내어 읽어요","한 줄씩 함께 읽고, 아이 말로 다시 말해 보게 해 주세요.",conHTML)
     +wsec("2","알아두면 좋아요","신기한 사실! 아이와 ‘우와’ 해 보세요.",funHTML)
     +wsec("3","확인 문제","알맞은 말에 ○ 하세요.",quizHTML)
-    +wsec("4","가족 탐구 활동","오늘의 개념을 몸으로 경험해요. 그림으로 남겨도 좋아요.",actHTML);
+    +wsec("4","가족 탐구 활동","오늘의 개념을 몸으로 경험해요. 그림으로 남겨도 좋아요.",actHTML)
+    +wsec("5","오늘 알게 된 것","가장 기억에 남는 것을 한 줄로 말하거나 써 보세요.",
+      `<div class="writeline"></div>
+       <div class="kitem" style="text-align:right">엄마 아빠에게 설명해 주었나요? 별을 색칠해요 → <span class="selfstars" style="font-size:18px">☆ ☆ ☆</span></div>`);
   return paperShell(d,"tamgu","var(--tamgu)","탐구",`${tp.c} · ${tp.t}`,TAMGU_GUIDE[tp.c],inner,
     tp.quiz.map((q,i)=>`${i+1}) ${q[1]}`).join("&nbsp;&nbsp; "));
 }
@@ -2532,21 +2563,24 @@ function ccShell(i,color,subjLabel,title,guide,inner,ansHtml){
     <div class="ansbox"><div class="at">정답 (부모용)</div><div class="al">${ansHtml}</div></div></div>`;
 }
 function ccMath(i){
-  let A="",B="",C="",aA="",aB="",aC="";
+  let A="",B="",C="",D="",aA="",aB="",aC="",aD="";
   if(i===0){
-    const cnt=uniqN(6,()=>{ const n=wrnd(2,9),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
+    const cnt=uniqN(8,()=>{ const n=wrnd(2,9),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
     A=wsec("1","그림 세기","그림을 세어 ▢에 수를 쓰세요.",mrows(cnt)); aA=ansline(cnt);
-    const add=uniqN(8,()=>{ const a=wrnd(1,5),b=wrnd(1,Math.min(4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
+    const add=uniqN(12,()=>{ const a=wrnd(1,5),b=wrnd(1,Math.min(4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
     B=wsec("2","합이 9까지의 덧셈","빈칸에 답을 쓰세요.",mrows(add,true)); aB=ansline(add);
-    const w=wordProblems(1,mkAddW(2,5,1,4)); C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); aC="문장제: 위 정답 참고";
+    const w=wordProblems(2,mkAddW(2,5,1,4)); C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); aC="문장제: 위 정답 참고";
+    D=wsec("4","숫자 따라 쓰기","1부터 10까지 예쁘게 따라 쓰세요.",traceRow("1 2 3 4 5")+traceRow("6 7 8 9 10")); aD="따라 쓰기";
   }
   if(i===1){
-    const pic=uniqN(4,()=>{ const t=wrnd(3,8),b=wrnd(1,t-1),e=wpick(["🍪","🍓","🎈","🍬"]);
+    const pic=uniqN(6,()=>{ const t=wrnd(3,8),b=wrnd(1,t-1),e=wpick(["🍪","🍓","🎈","🍬"]);
       return {q:`${e.repeat(t)} 에서 ${b}개를 먹으면 → `,a:t-b}; },x=>x.q);
     A=wsec("1","그림으로 빼기","먹고 남은 수를 쓰세요.",mrows(pic)); aA=ansline(pic);
-    const sub=uniqN(8,()=>{ const a=wrnd(2,9),b=wrnd(1,a); return P(`${a} − ${b}`,a-b); },x=>x.q);
+    const sub=uniqN(12,()=>{ const a=wrnd(2,9),b=wrnd(1,a); return P(`${a} − ${b}`,a-b); },x=>x.q);
     B=wsec("2","한 자리 뺄셈","빈칸에 답을 쓰세요.",mrows(sub,true)); aB=ansline(sub);
-    const w=wordProblems(1,mkSubW(4,9,3)); C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); aC="문장제: 위 정답 참고";
+    const w=wordProblems(2,mkSubW(4,9,3)); C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); aC="문장제: 위 정답 참고";
+    const rv1=uniqN(6,()=>{ const a=wrnd(1,5),b=wrnd(1,Math.min(4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
+    D=wsec("4","어제 배운 것 복습","덧셈을 한 번 더!",mrows(rv1,true)); aD=ansline(rv1);
   }
   if(i===2){
     const tf=`<div class="tenframe">${Array.from({length:10},(_,x)=>`<span class="${x<6?"f":"h"}"></span>`).join("")}</div>
@@ -2573,8 +2607,13 @@ function ccMath(i){
     B=wsec("2","도전! 받아올림 맛보기 (부모님과 함께)","10을 만들고 남은 수를 더해 보세요.",
       mrows(ch)); aB=ansline(ch);
   }
-  return ccShell(i,"var(--math)","수학",CC_TITLE_M[i],CC_MG[i],A+B+C,
-    `<b>①</b> ${aA}<br><b>②</b> ${aB}${aC?`<br><b>③</b> ${aC}`:""}`);
+  if(!C){ const w=wordProblems(2, i<3? mkAddW(3,6,2,4) : mkSubW(5,9,4));
+    C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); aC="문장제: 위 정답 참고"; }
+  if(!D){ const rv=uniqN(6,()=>{ if(WR()<.5){ const a=wrnd(1,5),b=wrnd(1,Math.min(4,9-a)); return P(`${a} + ${b}`,a+b); }
+      const a=wrnd(3,9),b=wrnd(1,a-1); return P(`${a} − ${b}`,a-b); },x=>x.q);
+    D=wsec("4","빠른 복습","배운 것을 잊지 않게 한 번 더!",mrows(rv,true)); aD=ansline(rv); }
+  return ccShell(i,"var(--math)","수학",CC_TITLE_M[i],CC_MG[i],A+B+C+D,
+    `<b>①</b> ${aA}<br><b>②</b> ${aB}${aC?`<br><b>③</b> ${aC}`:""}${aD?`<br><b>④</b> ${aD}`:""}`);
 }
 function ccKor(i){
   let A="",B="",aA="",aB="";
@@ -2615,8 +2654,12 @@ function ccKor(i){
     B=wsec("2","자유 쓰기","오늘 제일 재미있었던 일을 한 줄로 써 보세요.",
       `<div class="writeline"></div>`); aB="자유 쓰기 (무엇을 써도 정답!)";
   }
-  return ccShell(i,"var(--korean)","국어",CC_TITLE_K[i],CC_KG[i],A+B,
-    `<b>①</b> ${aA}<br><b>②</b> ${aB}`);
+  /* 밀도 보강: 모든 국어 C지면에 따라 쓰기 한 섹션 추가 */
+  const ts=wsample(TRACE_SENT,2);
+  const C2=wsec("3","문장 따라 쓰기","문장을 소리 내어 읽고 따라 쓰세요.",
+    ts.map(s=>`<div class="kitem">✏️ ${s}</div><div class="writeline"></div>`).join(""));
+  return ccShell(i,"var(--korean)","국어",CC_TITLE_K[i],CC_KG[i],A+B+C2,
+    `<b>①</b> ${aA}<br><b>②</b> ${aB}<br><b>③</b> 따라 쓰기`);
 }
 function ccPapers(i){
   WR=mulberry32(9000+i*37+(REROLL["c"+i]||0)*911);
