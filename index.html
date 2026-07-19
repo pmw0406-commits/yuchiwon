@@ -235,7 +235,12 @@
 
   /* ---------- quiz ---------- */
   .stage{ max-width:640px; margin:0 auto; text-align:center; }
-  .stage .qb{ min-height:380px; }   /* 문제 전환 시 화면 높이 점프 방지 */
+  .stage .qb{ min-height:360px; }   /* 문제 전환 시 화면 높이 점프 방지 */
+  .goalbar{ max-width:420px; margin:0 auto 6px; }
+  .gb-top{ display:flex; justify-content:space-between; font-size:13px; font-weight:800; color:var(--ink-2); margin-bottom:5px; }
+  .gb-n b{ color:var(--korean); font-variant-numeric:tabular-nums; }
+  .gb-track{ height:12px; background:var(--surface); border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .gb-fill{ height:100%; background:linear-gradient(90deg,var(--korean),var(--sticker)); border-radius:999px; transition:width .35s; }
   .scorebar{ display:inline-flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line);
     padding:8px 18px; border-radius:999px; box-shadow:var(--sh-s); font-weight:800; font-size:17px; }
   .q-row{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px;
@@ -820,6 +825,18 @@ function gOrdinal(){ const row=sample(EMOJI_POOL,5),n=rnd(1,5),ans=row[n-1],wron
   const kor=["첫","두","세","네","다섯"][n-1];
   return {rowEmojis:row,text:`왼쪽에서 ${kor} 번째는?`,say:`왼쪽에서 ${n}번째는 무엇일까요?`,choices:choiceSet(ans,wrongs,true)}; }
 
+/* 사고력 신규 유형 */
+function gSame(){ const same=pick(EMOJI_POOL); const others=sample(EMOJI_POOL.filter(e=>e!==same),2);
+  const arr=shuffle([same,same,...others]);
+  return {rowEmojis:arr, text:"똑같은 것이 둘 있어요. 같은 것은?", say:"똑같은 그림을 찾아보세요",
+    choices:choiceSet(same,others,true)}; }
+function gOdd(){ const grp=pick([["🍎","🍌","🍇","🚗"],["🐶","🐱","🐰","✈️"],["⭐","🌙","☀️","🍔"],["🔴","🔵","🟢","🐸"],["🚕","🚌","🚲","🍎"]]);
+  const odd=grp[3]; return {rowEmojis:grp.slice(0,3).concat(["❔"]), text:`${grp.slice(0,3).join(" ")} 과 어울리지 않는 것은?`, say:"종류가 다른 하나를 찾아보세요",
+    choices:choiceSet(odd,sample(grp.slice(0,3),2),true)}; }
+function gNext(){ const seq=pick([["🌱","🌿","🌳"],["🥚","🐣","🐔"],["🌑","🌓","🌕"],["😀","😐","😢"],["🔵","🔵🔵","🔵🔵🔵"]]);
+  const ans=seq[2]; const wrongs=sample(EMOJI_POOL.filter(e=>!seq.includes(e)),2);
+  return {rowEmojis:[seq[0],seq[1],"❔"], text:"다음에 올 것은?", say:"다음에 올 것을 찾아보세요",
+    choices:choiceSet(ans,wrongs,true)}; }
 /* 다현이 맞춤 신규 유형 (진단 데이터 기반) */
 function gCount(){ const n=rnd(2,9), e=pick(EMOJI_POOL);
   return {rowEmojis:Array(n).fill(e), text:"모두 몇 개일까요?", say:"모두 몇 개인지 세어 보세요",
@@ -849,6 +866,9 @@ const GENS=[
   {k:"pattern", label:"규칙 찾기",   subj:"사고력", g:gPattern, tip:"블록·과일로 직접 규칙 만들기 놀이를 해보세요."},
   {k:"compare", label:"수 비교",     subj:"사고력", g:gCompare, tip:"'큰 입이 큰 수를 먹어요'로 부등호를 기억시켜요."},
   {k:"ordinal", label:"몇 번째",     subj:"사고력", g:gOrdinal, tip:"줄 서기 놀이로 '~번째'를 몸으로 익히게 해요."},
+  {k:"same",    label:"같은 것 찾기", subj:"사고력", g:gSame,    tip:"카드 짝맞추기 놀이로 관찰력을 길러요."},
+  {k:"odd",     label:"다른 것 찾기", subj:"사고력", g:gOdd,     tip:"‘왜 다를까?’ 이유를 말하게 해요."},
+  {k:"next",    label:"다음은 뭘까",  subj:"사고력", g:gNext,    tip:"자라는 순서·변화를 이야기로 들려줘요."},
 ];
 const GEN_BY_KEY=Object.fromEntries(GENS.map(x=>[x.k,x]));
 
@@ -899,18 +919,35 @@ function optHTML(ch){ if(ch.emoji) return `<span class="oe">${ch.show}</span>`;
   const long=String(ch.show).length>6;
   return `<span class="ol"${long?' style="font-size:16px;line-height:1.45;font-weight:700"':''}>${ch.show}</span>`; }
 function makeQuizArea(area,key,lang){
-  const gen=GEN_BY_KEY[key].g; let streakN=0;
-  area.innerHTML=`<div class="stage"><div class="scorebar">⭐ <span class="sv">0</span></div><div class="qb"></div></div>`;
-  const sv=area.querySelector(".sv"), qb=area.querySelector(".qb");
-  function next(){ const p=gen(); let first=true;
+  const gen=GEN_BY_KEY[key].g; const GOAL=10; let solved=0;
+  area.innerHTML=`<div class="stage">
+    <div class="goalbar"><div class="gb-top"><span>오늘의 목표</span><span class="gb-n"><b>0</b> / ${GOAL}</span></div>
+      <div class="gb-track"><div class="gb-fill" style="width:0%"></div></div></div>
+    <div class="qb"></div></div>`;
+  const gbn=area.querySelector(".gb-n b"), gbf=area.querySelector(".gb-fill"), qb=area.querySelector(".qb");
+  function finish(){
+    record("done_"+key,true); confetti(); bigConfetti(); speak("오늘 목표를 다 했어요! 정말 잘했어요!");
+    qb.innerHTML=`<div class="finish"><div class="big">🎉</div>
+      <div class="q-text">오늘 ${GOAL}문제 끝! 참 잘했어요!</div>
+      <div class="hint">별 ${GOAL}개를 모았어요 ⭐</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+        <button class="pill accent" id="qAgain" style="--ac:var(--korean)">🔁 한 번 더</button>
+        <button class="pill" id="qHome">← 다른 공부 하기</button></div></div>`;
+    document.getElementById("qAgain").onclick=()=>makeQuizArea(area,key,lang);
+    document.getElementById("qHome").onclick=()=>{ location.hash="home"; };
+  }
+  function next(){
+    if(solved>=GOAL) return finish();
+    const p=gen(); let first=true;
     const row=p.rowEmojis?`<div class="q-row">${p.rowEmojis.map(e=>`<span>${e}</span>`).join("")}</div>`:"";
     qb.innerHTML=row+`<div class="q-text">${p.text}</div><div class="q-choices${p.choices.length===2?" two":""}"></div>`;
     speak(p.say,p.sayLang||lang||"ko-KR");
     const wrap=qb.querySelector(".q-choices");
     p.choices.forEach(ch=>{ const b=document.createElement("button"); b.className="opt";
       b.innerHTML=optHTML(ch);
-      b.onclick=()=>{ if(ch.ok){ record(key,first); b.classList.add("right"); streakN++; sv.textContent=streakN;
-          speak("잘했어요!"); confetti(); [...wrap.children].forEach(x=>x.disabled=true); setTimeout(next,1150); }
+      b.onclick=()=>{ if(ch.ok){ record(key,first); b.classList.add("right"); solved++;
+          gbn.textContent=solved; gbf.style.width=(solved/GOAL*100)+"%";
+          speak(solved>=GOAL?"":"잘했어요!"); confetti(); [...wrap.children].forEach(x=>x.disabled=true); setTimeout(next,1050); }
         else { if(first) record(key,false); first=false; b.classList.add("wrong"); b.disabled=true; speak("다시 해볼까?"); } };
       wrap.appendChild(b); });
     if(window.__LT_DEBUG) [...wrap.children].forEach((x,i)=>{ if(p.choices[i].ok) x.dataset.ok="1"; });
@@ -1135,8 +1172,9 @@ function renderMath(){
   const keys=(CHILD_CFG.mathModes&&CHILD_CFG.mathModes.length)?CHILD_CFG.mathModes:["add","sub","make10","two"];
   modeTabs([{label:"🖐 만지며 배우기",build:renderTouchMath}]
     .concat(keys.map(k=>({label:GEN_BY_KEY[k].label,build:a=>makeQuizArea(a,k)})))); }
-function renderThink(){ modeTabs([{label:"규칙 찾기",build:a=>makeQuizArea(a,"pattern")},{label:"큰 수·작은 수",build:a=>makeQuizArea(a,"compare")},
-  {label:"몇 번째",build:a=>makeQuizArea(a,"ordinal")}]); }
+function renderThink(){ modeTabs([{label:"규칙 찾기",build:a=>makeQuizArea(a,"pattern")},{label:"같은 것 찾기",build:a=>makeQuizArea(a,"same")},
+  {label:"다른 것 찾기",build:a=>makeQuizArea(a,"odd")},{label:"다음은 뭘까",build:a=>makeQuizArea(a,"next")},
+  {label:"큰 수·작은 수",build:a=>makeQuizArea(a,"compare")},{label:"몇 번째",build:a=>makeQuizArea(a,"ordinal")}]); }
 function renderEnglish(){ modeTabs([{label:"알파벳 ABC",build:a=>renderFlash(a,ALPHABET,"en-US")},{label:"첫 단어",build:a=>renderFlash(a,CVC,"en-US")}]); }
 
 /* ===== Challenge (weakness-weighted) ===== */
@@ -2594,7 +2632,7 @@ const TAMGU_GUIDE={
 function tamguPaper(d){
   const idx=(d+(WCOURSE-1)*13)%TAMGU.length, tp=TAMGU[idx];
   const conHTML=`<div class="tg-hero"><span class="tg-emoji">${tp.e}</span>
-      <div><div class="tg-cat">${tp.c==="과학"?"🔬 과학":"🏘️ 사회"} 탐구</div><div class="tg-title">${tp.t}</div></div></div>
+      <div><div class="tg-cat">${tp.c==="과학"?"🔬 과학":tp.c==="인성"?"😊 인성·바른생활":"🏘️ 사회"} 탐구</div><div class="tg-title">${tp.t}</div></div></div>
     <div class="tg-con">${tp.con.map((c,i)=>`<div class="tg-line"><span class="tg-no">${i+1}</span>${c}</div>`).join("")}</div>`;
   const funHTML=tp.fun.map(f=>`<div class="tg-fun">💡 ${f}</div>`).join("");
   const quizHTML=tp.quiz.map((q,i)=>
@@ -2797,6 +2835,96 @@ TAMGU.push(
  {c:"사회",e:"🌏",t:"소중한 물과 나무",con:["물은 우리가 마시고 씻는 데 꼭 필요해요.","나무는 맑은 공기를 만들어 줘요.","물을 아끼고 나무를 심으면 지구가 건강해져요."],
   fun:["나무 한 그루가 하루 종일 깨끗한 공기를 만들어요.","우리가 마실 수 있는 물은 생각보다 아주 적어요."],
   quiz:[["맑은 공기를 만드는 것은 ( 나무 / 자동차 )","나무"],["물은 ( 아껴요 / 펑펑 써요 )","아껴요"],["나무를 심으면 지구가 건강해져요. ( O / X )","O"]],act:"양치할 때 컵을 써서 물을 아껴 보세요."});
+
+/* ===== 콘텐츠 대량 증설 ③ — 인성·바른생활 20 + 탐구 8 (총 88주제) ===== */
+TAMGU_GUIDE["인성"]={c:"인성·바른생활은 ‘옳은 마음’을 이야기로 느끼게 해요.",t:["정답보다 아이의 생각과 마음을 먼저 들어 주세요.","오늘 하나만 실천해 보게 하고, 잘하면 꼭 칭찬해요."]};
+TAMGU.push(
+ {c:"인성",e:"🙏",t:"고마운 마음 전하기",con:["도움을 받으면 ‘고맙습니다’라고 말해요.","고마운 마음은 표정과 말로 전해요.","작은 일에도 고마워하면 마음이 따뜻해져요."],
+  fun:["‘고맙다’는 말을 들으면 서로 기분이 좋아져요.","감사 일기를 쓰면 행복이 늘어난대요!"],
+  quiz:[["도움을 받으면 ( 고맙습니다 / 몰라요 )","고맙습니다"],["고마운 마음은 ( 말로 전해요 / 숨겨요 )","말로 전해요"],["작은 일에도 고마워하면 좋아요. ( O / X )","O"]],act:"오늘 가족에게 고마웠던 일 한 가지를 말해 보세요."},
+ {c:"인성",e:"🤝",t:"친구와 나누기",con:["장난감과 간식을 친구와 나눠요.","나누면 친구도 나도 즐거워요.","혼자 다 가지려 하면 친구가 속상해요."],
+  fun:["나눌수록 즐거움은 두 배가 돼요.","‘같이 놀자’는 말은 마법의 말이에요!"],
+  quiz:[["장난감은 ( 나눠요 / 혼자 가져요 )","나눠요"],["나누면 ( 즐거워요 / 슬퍼요 )","즐거워요"],["다 가지려 하면 친구가 속상해요. ( O / X )","O"]],act:"오늘 친구나 동생에게 무언가를 나눠 주어 보세요."},
+ {c:"인성",e:"😢",t:"화가 날 때는",con:["화가 나면 크게 숨을 세 번 쉬어요.","때리거나 던지지 않고 말로 표현해요.","‘나 화났어’라고 말하면 마음이 가라앉아요."],
+  fun:["숨을 천천히 쉬면 화가 줄어들어요.","화도 소중한 감정이에요. 표현이 중요해요!"],
+  quiz:[["화가 나면 ( 숨을 쉬어요 / 던져요 )","숨을 쉬어요"],["화는 ( 말로 / 주먹으로 ) 표현해요","말로"],["화도 소중한 감정이에요. ( O / X )","O"]],act:"화날 때 하는 ‘나만의 진정 방법’을 정해 보세요."},
+ {c:"인성",e:"🤥",t:"정직하게 말해요",con:["거짓말을 하면 마음이 불편해요.","잘못했을 때는 솔직하게 말해요.","정직하면 사람들이 나를 믿어 줘요."],
+  fun:["작은 정직이 큰 믿음을 만들어요.","솔직하게 말하면 마음이 가벼워져요."],
+  quiz:[["거짓말을 하면 마음이 ( 불편해요 / 편해요 )","불편해요"],["잘못은 ( 솔직하게 / 숨기고 ) 말해요","솔직하게"],["정직하면 사람들이 믿어 줘요. ( O / X )","O"]],act:"오늘 솔직하게 말해서 뿌듯했던 일을 이야기해 보세요."},
+ {c:"인성",e:"💪",t:"실수해도 괜찮아",con:["누구나 실수를 해요.","실수는 배우는 기회예요.","다시 도전하면 더 잘할 수 있어요."],
+  fun:["에디슨은 수천 번 실수하고 전구를 만들었어요.","실수를 두려워하지 않는 마음이 용기예요!"],
+  quiz:[["실수는 ( 누구나 / 나만 ) 해요","누구나"],["실수는 ( 배우는 기회 / 부끄러운 것 )예요","배우는 기회"],["실수하면 다시 도전하면 돼요. ( O / X )","O"]],act:"오늘 실수했지만 다시 해낸 일을 떠올려 칭찬해 주세요."},
+ {c:"인성",e:"⏳",t:"차례를 기다려요",con:["미끄럼틀도 그네도 차례가 있어요.","기다리면 나에게도 순서가 와요.","새치기하면 친구가 속상해요."],
+  fun:["차례를 지키면 다투는 일이 줄어들어요.","기다림도 연습하면 잘할 수 있어요!"],
+  quiz:[["놀이기구는 ( 차례로 / 마음대로 ) 타요","차례로"],["기다리면 나에게도 ( 순서 / 벌 )가 와요","순서"],["새치기는 좋은 행동이에요. ( O / X )","X"]],act:"오늘 차례를 잘 기다린 순간을 칭찬해 주세요."},
+ {c:"인성",e:"🧹",t:"내 물건은 내가 정리",con:["가지고 논 장난감은 스스로 정리해요.","정리하면 다음에 찾기 쉬워요.","정리는 나를 위한 좋은 습관이에요."],
+  fun:["‘제자리’를 정해 두면 정리가 쉬워요.","정리된 방은 마음도 깨끗하게 해줘요."],
+  quiz:[["논 장난감은 ( 스스로 / 그냥 둬요 ) 정리해요","스스로"],["정리하면 다음에 ( 찾기 쉬워요 / 어려워요 )","찾기 쉬워요"],["정리는 좋은 습관이에요. ( O / X )","O"]],act:"오늘 논 장난감을 스스로 제자리에 정리해 보세요."},
+ {c:"인성",e:"🫂",t:"친구를 도와줘요",con:["친구가 넘어지면 일으켜 줘요.","힘든 친구에게 ‘괜찮아?’ 물어봐요.","도움을 주면 나도 기분이 좋아져요."],
+  fun:["작은 도움이 큰 힘이 돼요.","서로 도우면 어려운 일도 쉬워져요!"],
+  quiz:[["친구가 넘어지면 ( 일으켜 줘요 / 웃어요 )","일으켜 줘요"],["힘든 친구에게 ( 괜찮아? / 몰라 ) 물어요","괜찮아?"],["도우면 나도 기분이 좋아져요. ( O / X )","O"]],act:"오늘 누군가를 도와준 일을 이야기해 보세요."},
+ {c:"인성",e:"🌟",t:"약속을 지켜요",con:["약속은 꼭 지켜야 하는 소중한 말이에요.","못 지킬 약속은 처음부터 하지 않아요.","약속을 지키면 사람들이 나를 믿어요."],
+  fun:["작은 약속을 지키는 사람이 큰 믿음을 받아요.","시간 약속을 지키면 모두가 편해요!"],
+  quiz:[["약속은 ( 지켜요 / 잊어요 )","지켜요"],["못 지킬 약속은 ( 하지 않아요 / 그냥 해요 )","하지 않아요"],["약속을 지키면 믿음을 얻어요. ( O / X )","O"]],act:"오늘 지킬 작은 약속 하나를 정하고 실천해 보세요."},
+ {c:"인성",e:"🦸",t:"용기를 내요",con:["무서워도 옳은 일은 용기 내어 해요.","도움이 필요하면 용기 내어 말해요.","용기는 씩씩한 마음이에요."],
+  fun:["용기는 무섭지 않은 게 아니라 무서워도 하는 거예요.","작은 용기가 모여 큰 힘이 돼요!"],
+  quiz:[["옳은 일은 ( 용기 내어 / 피해서 ) 해요","용기 내어"],["도움이 필요하면 ( 말해요 / 참아요 )","말해요"],["용기는 씩씩한 마음이에요. ( O / X )","O"]],act:"오늘 용기 내어 한 일을 이야기하고 칭찬해 주세요."},
+ {c:"인성",e:"👂",t:"남의 말을 잘 들어요",con:["친구가 말할 때는 끝까지 들어요.","눈을 보고 고개를 끄덕여요.","잘 들으면 친구가 나를 좋아해요."],
+  fun:["잘 듣는 것도 멋진 능력이에요.","말하기 전에 듣는 습관이 대화를 즐겁게 해요!"],
+  quiz:[["친구 말은 ( 끝까지 / 중간에 끊고 ) 들어요","끝까지"],["들을 때 ( 눈을 봐요 / 딴짓해요 )","눈을 봐요"],["잘 들으면 친구가 좋아해요. ( O / X )","O"]],act:"오늘 가족의 이야기를 눈을 보며 끝까지 들어 보세요."},
+ {c:"인성",e:"🍽️",t:"음식을 소중히",con:["음식은 남기지 않고 골고루 먹어요.","‘잘 먹겠습니다’ 인사를 해요.","농부와 요리한 분께 감사한 마음을 가져요."],
+  fun:["밥 한 그릇에 많은 사람의 수고가 담겨 있어요.","음식을 아끼면 지구도 건강해져요!"],
+  quiz:[["음식은 ( 골고루 / 좋아하는 것만 ) 먹어요","골고루"],["밥 먹기 전 ( 잘 먹겠습니다 / 아무 말 )","잘 먹겠습니다"],["음식은 소중히 여겨요. ( O / X )","O"]],act:"오늘 밥을 남기지 않고 감사 인사를 해 보세요."},
+ {c:"인성",e:"🧼",t:"깨끗한 나",con:["손을 자주 씻어 세균을 없애요.","밥 먹기 전과 화장실 다녀온 뒤 꼭 씻어요.","깨끗하면 병에 잘 걸리지 않아요."],
+  fun:["비누로 30초 씻으면 세균이 쏙 사라져요.","기침할 땐 팔로 입을 가려요!"],
+  quiz:[["손은 ( 자주 / 가끔 ) 씻어요","자주"],["밥 먹기 ( 전 / 후 )에 손을 씻어요","전"],["깨끗하면 병에 잘 안 걸려요. ( O / X )","O"]],act:"오늘 손 씻기를 노래 부르며 30초 동안 해보세요."},
+ {c:"인성",e:"🌈",t:"모두 다르고 소중해요",con:["친구마다 좋아하는 것이 달라요.","다르다고 놀리지 않아요.","다름을 존중하면 세상이 더 재미있어요."],
+  fun:["세상에 똑같은 사람은 한 명도 없어요.","다르기 때문에 서로 배울 수 있어요!"],
+  quiz:[["친구들은 서로 ( 달라요 / 똑같아요 )","달라요"],["다른 친구를 ( 존중해요 / 놀려요 )","존중해요"],["다름은 소중해요. ( O / X )","O"]],act:"나와 친구의 다른 점 하나, 같은 점 하나를 찾아보세요."},
+ {c:"인성",e:"😌",t:"참고 기다리는 힘",con:["갖고 싶어도 참을 줄 알아야 해요.","기다리면 더 좋은 것이 올 때도 있어요.","조금 참으면 마음이 더 단단해져요."],
+  fun:["‘조금만 기다리면’이라는 말을 스스로 해봐요.","참는 연습을 하면 화도 덜 나요!"],
+  quiz:[["갖고 싶어도 ( 참을 줄 / 떼쓸 줄 ) 알아야 해요","참을 줄"],["기다리면 좋은 것이 올 수 있어요. ( O / X )","O"],["참으면 마음이 단단해져요. ( O / X )","O"]],act:"오늘 하고 싶은 걸 조금 참아 본 순간을 칭찬해 주세요."},
+ {c:"인성",e:"🗣️",t:"고운 말을 써요",con:["고운 말은 듣는 사람을 기분 좋게 해요.","나쁜 말은 마음에 상처를 줘요.","‘고마워, 미안해, 괜찮아’는 예쁜 말이에요."],
+  fun:["고운 말을 쓰면 고운 말이 돌아와요.","말 한마디가 하루를 바꿔요!"],
+  quiz:[["고운 말은 기분을 ( 좋게 / 나쁘게 ) 해요","좋게"],["나쁜 말은 ( 상처를 / 선물을 ) 줘요","상처를"],["‘고마워’는 예쁜 말이에요. ( O / X )","O"]],act:"오늘 가족에게 예쁜 말 세 가지를 해보세요."},
+ {c:"인성",e:"🎯",t:"끝까지 해내요",con:["시작한 일은 끝까지 해봐요.","어려워도 조금씩 하면 끝이 와요.","해내면 뿌듯한 마음이 생겨요."],
+  fun:["‘조금만 더!’ 하는 마음이 끝을 만들어요.","끝까지 해낸 경험이 자신감을 키워요!"],
+  quiz:[["시작한 일은 ( 끝까지 / 중간에 그만 ) 해요","끝까지"],["어려워도 ( 조금씩 / 포기하고 ) 해요","조금씩"],["해내면 뿌듯해요. ( O / X )","O"]],act:"오늘 끝까지 해낸 일 하나를 떠올려 스스로 칭찬해요."},
+ {c:"인성",e:"💛",t:"나를 사랑해요",con:["나는 세상에 하나뿐인 소중한 사람이에요.","잘하는 것도, 못하는 것도 다 나예요.","나를 아끼면 다른 사람도 아낄 수 있어요."],
+  fun:["거울 보고 ‘나는 멋져!’ 말해봐요.","자신을 사랑하는 마음이 행복의 시작이에요!"],
+  quiz:[["나는 ( 소중한 / 별로인 ) 사람이에요","소중한"],["못하는 것도 ( 다 나예요 / 나쁜 거예요 )","다 나예요"],["나를 아끼면 남도 아낄 수 있어요. ( O / X )","O"]],act:"거울을 보고 ‘나는 소중해!’라고 세 번 외쳐 보세요."},
+ {c:"인성",e:"🤗",t:"미안하다고 말해요",con:["잘못했을 때는 ‘미안해’라고 말해요.","사과하면 마음이 편해지고 화해할 수 있어요.","진심으로 사과하는 건 용기 있는 행동이에요."],
+  fun:["‘미안해’ 한마디가 사이를 다시 좋게 해요.","사과 뒤에 ‘괜찮아’로 화해해요!"],
+  quiz:[["잘못했을 때 ( 미안해 / 흥! )라고 해요","미안해"],["사과하면 ( 화해할 수 / 더 싸울 수 ) 있어요","화해할 수"],["사과는 용기 있는 행동이에요. ( O / X )","O"]],act:"오늘 미안한 마음을 전하고 화해해 보세요."},
+ {c:"인성",e:"🌱",t:"작은 일도 스스로",con:["옷 입기, 신발 신기를 스스로 해봐요.","스스로 하면 뿌듯하고 자랑스러워요.","조금 서툴러도 자꾸 하면 잘하게 돼요."],
+  fun:["‘내가 했어!’의 기쁨은 아주 커요.","스스로 하는 습관이 멋진 어린이를 만들어요!"],
+  quiz:[["옷 입기는 ( 스스로 / 남이 ) 해봐요","스스로"],["스스로 하면 ( 뿌듯해요 / 심심해요 )","뿌듯해요"],["서툴러도 자꾸 하면 잘해져요. ( O / X )","O"]],act:"오늘 스스로 해낸 일 한 가지를 자랑해 보세요."});
+/* 탐구 추가 +8 (과학·사회) */
+TAMGU.push(
+ {c:"과학",e:"🌍",t:"낮과 밤이 생겨요",con:["지구는 팽이처럼 빙글빙글 돌아요.","해를 바라보는 쪽은 낮, 반대쪽은 밤이에요.","지구가 한 바퀴 돌면 하루가 지나요."],
+  fun:["지구는 아주 빠르게 돌지만 우리는 못 느껴요.","지구 반대편은 우리가 잘 때 낮이에요!"],
+  quiz:[["지구는 ( 돌아요 / 멈춰 있어요 )","돌아요"],["해를 바라보는 쪽은 ( 낮 / 밤 )","낮"],["지구가 한 바퀴 돌면 하루예요. ( O / X )","O"]],act:"공을 돌리며 낮과 밤을 몸으로 표현해 보세요."},
+ {c:"과학",e:"🌡️",t:"온도계와 날씨",con:["온도계로 얼마나 덥고 추운지 알 수 있어요.","날씨는 맑음, 흐림, 비, 눈으로 달라요.","날씨에 맞게 옷을 입어요."],
+  fun:["온도가 0도보다 낮으면 물이 얼어요.","일기예보는 내일 날씨를 미리 알려줘요!"],
+  quiz:[["덥고 추운 건 ( 온도계 / 저울 )로 알아요","온도계"],["비 오는 날엔 ( 우산 / 부채 )","우산"],["날씨에 맞게 옷을 입어요. ( O / X )","O"]],act:"오늘 날씨를 보고 알맞은 옷을 골라 보세요."},
+ {c:"과학",e:"🐌",t:"느린 동물 빠른 동물",con:["치타는 아주 빠르게 달려요.","달팽이와 거북이는 아주 느려요.","동물마다 움직이는 속도가 달라요."],
+  fun:["치타는 자동차만큼 빨라요!","느린 거북이는 아주 오래 산답니다."],
+  quiz:[["가장 빠른 동물은 ( 치타 / 달팽이 )","치타"],["느린 동물은 ( 거북이 / 치타 )","거북이"],["동물마다 속도가 달라요. ( O / X )","O"]],act:"빠른 동물과 느린 동물을 흉내 내며 움직여 보세요."},
+ {c:"과학",e:"🌰",t:"열매와 씨",con:["사과, 수박, 포도 속에는 씨가 있어요.","씨를 심으면 새 나무가 자라요.","열매는 씨를 지키는 집이에요."],
+  fun:["수박씨는 뱉어도 배 속에서 자라지 않아요.","해바라기 씨는 먹을 수도 있어요!"],
+  quiz:[["사과 속에는 ( 씨 / 돌 )가 있어요","씨"],["씨를 심으면 ( 나무 / 사탕 )가 자라요","나무"],["열매는 씨를 지키는 집이에요. ( O / X )","O"]],act:"과일을 먹을 때 씨를 찾아 관찰해 보세요."},
+ {c:"사회",e:"🏳️",t:"우리나라 태극기",con:["우리나라 국기는 태극기예요.","가운데 빨강·파랑 원은 조화를 뜻해요.","국경일에는 태극기를 달아요."],
+  fun:["태극기는 세계에서 가장 뜻이 깊은 국기 중 하나예요.","네 귀퉁이 무늬는 하늘·땅·물·불이에요!"],
+  quiz:[["우리나라 국기는 ( 태극기 / 무지개기 )","태극기"],["국경일엔 태극기를 ( 달아요 / 숨겨요 )","달아요"],["태극기 가운데는 원이 있어요. ( O / X )","O"]],act:"태극기를 색칠하고 어디에 거는지 찾아보세요."},
+ {c:"사회",e:"🚓",t:"우리를 지켜주는 분들",con:["경찰관은 나쁜 일을 막고 우리를 지켜요.","소방관은 불을 끄고 사람을 구해요.","군인은 나라를 지켜요."],
+  fun:["위험할 땐 112(경찰), 119(소방)에 전화해요.","이분들 덕분에 우리가 안전하게 지내요!"],
+  quiz:[["나쁜 일을 막는 분은 ( 경찰관 / 화가 )","경찰관"],["불이 나면 ( 119 / 짜장면 )","119"],["이분들은 우리를 지켜줘요. ( O / X )","O"]],act:"고마운 경찰관·소방관께 감사 그림을 그려 보세요."},
+ {c:"사회",e:"🎋",t:"우리나라 명절",con:["설날엔 세배하고 떡국을 먹어요.","추석엔 송편을 빚고 보름달을 봐요.","명절엔 가족이 모여요."],
+  fun:["떡국을 먹으면 나이를 한 살 더 먹는대요.","한복은 명절에 입는 우리 옷이에요!"],
+  quiz:[["설날엔 ( 떡국 / 케이크 )을 먹어요","떡국"],["추석엔 ( 송편 / 도넛 )을 빚어요","송편"],["명절엔 가족이 모여요. ( O / X )","O"]],act:"세배하는 법을 연습하고 새해 인사를 해보세요."},
+ {c:"사회",e:"🏪",t:"우리 동네 둘러보기",con:["동네에는 가게, 병원, 은행, 우체국이 있어요.","각 장소는 하는 일이 달라요.","우리 동네를 알면 길을 잘 찾아요."],
+  fun:["편의점은 밤에도 문을 열어요.","우리 집 주소를 알아 두면 좋아요!"],
+  quiz:[["아플 때 가는 곳은 ( 병원 / 빵집 )","병원"],["편지를 부치는 곳은 ( 우체국 / 학교 )","우체국"],["동네를 알면 길을 잘 찾아요. ( O / X )","O"]],act:"우리 동네에서 본 장소 세 곳을 말해 보세요."});
 
 /* ---- 공통 종이 틀 ---- */
 /* ===== 학습 코칭 라이브러리 — 아이에게 할 말 + 자주 하는 실수 (지도 대사) ===== */
