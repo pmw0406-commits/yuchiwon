@@ -10,7 +10,7 @@
     --bg:#F6F4EE; --surface:#FFFFFF; --surface-2:#FBFAF6;
     --ink:#1A1E27; --ink-2:#4B5162; --ink-3:#8B8F9B;
     --line:#E9E5DB; --line-2:#F1EEE5;
-    --korean:#D6455D; --math:#2E63E7; --english:#E08A00; --think:#189A72; --quiz:#7A5AF8;
+    --korean:#D6455D; --math:#2E63E7; --english:#E08A00; --think:#189A72; --quiz:#7A5AF8; --tamgu:#0E8A9E;
     --book:#A2673F; --sticker:#E7A400; --parent:#48607C;
     --ok:#189A72; --no:#D6455D;
     --sh-s:0 1px 2px rgba(26,30,39,.04), 0 4px 14px rgba(26,30,39,.05);
@@ -336,6 +336,22 @@
   .swbox span{ border:2px solid var(--sc); color:var(--sc); background:#fff; border-radius:11px; font-weight:800; font-size:16px; padding:5px 15px; }
   .efill{ font-size:19px; font-weight:700; display:flex; align-items:center; gap:9px; padding:5px 0; }
   .conn{ display:grid; grid-template-columns:1fr 1fr; gap:6px 30px; font-size:14px; font-weight:700; }
+  /* 탐구(사회·과학) 지면 */
+  .tg-hero{ display:flex; align-items:center; gap:14px; margin:2px 0 10px; }
+  .tg-emoji{ font-size:52px; line-height:1; }
+  .tg-cat{ font-size:11.5px; font-weight:800; letter-spacing:1.5px; color:var(--sc); }
+  .tg-title{ font-size:24px; font-weight:800; letter-spacing:-.6px; }
+  .tg-con{ background:#F4FAFB; border:1px solid #D8ECEF; border-radius:12px; padding:12px 15px; }
+  .tg-line{ display:flex; gap:9px; font-size:15px; font-weight:600; line-height:1.75; margin:4px 0; }
+  .tg-line .tg-no{ flex:none; width:20px; height:20px; border-radius:7px; background:var(--sc); color:#fff;
+    display:grid; place-items:center; font-size:11.5px; font-weight:800; margin-top:4px; }
+  .tg-fun{ font-size:14px; font-weight:600; background:#FFF8E7; border:1px dashed #E8CE8F; border-radius:10px;
+    padding:8px 13px; margin:6px 0; line-height:1.6; }
+  .drawbox{ border:1.6px dashed #C9C1B0; border-radius:12px; height:130px; margin-top:8px;
+    background:#FDFCFA; position:relative; }
+  .drawbox::after{ content:"✏️ 여기에 그려 보세요"; position:absolute; right:10px; bottom:7px;
+    font-size:11px; font-weight:700; color:#B3AC9E; }
+
   .pfoot{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; border-top:1px solid #EFEBE1;
     margin-top:16px; padding-top:11px; font-size:12.5px; font-weight:700; color:#6f6b62; flex-wrap:wrap; }
   .pfoot .mark{ font-size:11px; letter-spacing:1px; color:#B3AC9E; }
@@ -631,15 +647,17 @@ function renderTodayTask(){
   if(!t){ m.innerHTML=`<div class="task-card"><div class="tk-l"><div class="tk-eyebrow">오늘의 학습</div>
       <div class="tk-title">🎓 모든 과정을 끝냈어요! 정말 대단해요!</div></div></div>`; return; }
   const doneToday=Object.values(S.done||{}).filter(v=>v===todayStr()).length;
-  m.innerHTML=`<div class="task-card">
+  m.innerHTML=`<div class="task-card"${t.review?' style="border-color:color-mix(in srgb,var(--no) 45%, var(--line))"':''}>
     <div class="tk-l">
-      <div class="tk-eyebrow">오늘의 학습 ${doneToday?`· 오늘 ${doneToday}개 완료 🎉`:""}</div>
-      <div class="tk-title">${t.type==="c"?"🌸":"📄"} ${t.label} — ${t.title}</div>
+      <div class="tk-eyebrow"${t.review?' style="color:var(--no)"':''}>${t.review?"🚩 복습 먼저 — 해결하고 넘어가요":"오늘의 학습"} ${doneToday?`· 오늘 ${doneToday}개 완료 🎉`:""}</div>
+      <div class="tk-title">${t.review?"🔁":(t.type==="c"?"🌸":"📄")} ${t.label} — ${t.title}</div>
       <div class="tk-prog"><span class="tk-bar"><i style="width:${pct}%"></i></span>
-        <span class="tk-pct">진도 ${dn}/${total} (${pct}%)</span></div>
+        <span class="tk-pct">진도 ${dn}/${total} (${pct}%) · ${COURSE_NAMES[S.course||1]}</span></div>
     </div>
-    <button class="pill accent tk-go" id="tkGo" style="--ac:var(--korean)">시작하기 →</button></div>`;
-  document.getElementById("tkGo").onclick=()=>{ t.type==="c"?openCustomDay(t.i):openDay(t.i); };
+    <button class="pill accent tk-go" id="tkGo" style="--ac:${t.review?"var(--no)":"var(--korean)"}">시작하기 →</button></div>`;
+  document.getElementById("tkGo").onclick=()=>{
+    if(t.review){ const rk=t.type==="c"?("c"+t.i):t.i; REROLL[rk]=(REROLL[rk]||0)+1; }  /* 복습은 새 문제로 */
+    t.type==="c"?openCustomDay(t.i):openDay(t.i); };
 }
 document.getElementById("brandHome").onclick=()=>{ location.hash="home"; };
 function renderSetup(){
@@ -1184,7 +1202,9 @@ function runLT(){
     const missU=[...new Set(missed)].slice(0,8);
     const okU=[...new Set(okSkills)];
     S.level={m:res.m,k:res.k,e:res.e,rec,per,tested,miss:missU,review:review.slice(0,8),
-      traj:trajS,date:todayStr()}; save();
+      traj:trajS,date:todayStr()};
+    S.levelHist=(S.levelHist||[]).concat([{date:todayStr(),m:res.m,k:res.k,e:res.e}]).slice(-6);
+    save();
     /* 결과를 클라우드에 기록 → 맞춤 커리큘럼 조정에 사용 */
     if(supaOK()){ supaFetch("test_results",{method:"POST",body:JSON.stringify(
       {fam:S.fam||null,name:S.name||null,m:res.m,k:res.k,e:res.e,rec,
@@ -1447,6 +1467,31 @@ function renderParent(){
       <b style="color:var(--ink)">적용 중</b> — 레벨테스트 국어→수학(영어 제외) · 수학 난이도 쉬움(합≤10) · 두 자리 제외 ·
       국어 퀴즈에 맞춤법/문장/조사 추가 · 도전 퀴즈 가중(덧셈·10만들기·맞춤법·문장) ·
       문제집 <b style="color:var(--korean)">맞춤 5일 코스</b> 신설 (C1~C5, 하루 2장)</div></div>
+    <div class="panelbox full"><h3>🚩 보완이 필요한 부분 — 해결하고 넘어가요</h3>
+      ${(S.reviewQueue&&S.reviewQueue.length)?S.reviewQueue.map(r=>{
+        const isC=r.key[0]==="c", i=Number(r.key.slice(1));
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;font-weight:700">
+          <span style="color:var(--no)">🔁</span> ${isC?`맞춤 C${i+1}`:`${i+1}일차`} · ${(r.subs||[]).join(", ")}
+          <span style="font-size:12px;color:var(--ink-3)">(${r.date})</span>
+          <span style="margin-left:auto;font-size:12.5px;color:var(--ink-3)">‘오늘의 학습’에서 자동으로 먼저 나와요</span></div>`; }).join("")
+        :`<p style="font-size:14px;font-weight:600;color:var(--ink-2);margin:0">지금은 없어요 👏 학습지 완료 시 ‘많이 틀린 과목’을 체크하면 여기에 모여, 다음 학습에서 자동으로 복습됩니다.</p>`}
+      ${S.level&&S.level.miss&&S.level.miss.length?`<div style="margin-top:10px;font-size:13px;font-weight:700;color:var(--ink-2)">🧭 진단 보충 유형: ${S.level.miss.join(" · ")} <span style="color:var(--ink-3)">→ 도전 퀴즈가 자동으로 더 자주 출제 중</span></div>`:""}
+    </div>
+    <div class="panelbox full"><h3>📈 4주 성장 흐름</h3>
+      <div style="display:flex;gap:8px;align-items:flex-end;height:90px">${[3,2,1,0].map(wk=>{
+        let sheets=0, stars=0;
+        for(let dd=0;dd<7;dd++){ const dt=new Date(); dt.setDate(dt.getDate()-(wk*7+dd));
+          const k2=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+          stars+=S.days[k2]||0; sheets+=Object.values(S.done||{}).filter(v=>v===k2).length; }
+        const h=Math.min(70,sheets*10+4);
+        return `<div style="flex:1;text-align:center">
+          <div style="font-size:11px;font-weight:800;margin-bottom:3px">${sheets?sheets+"장":"·"}</div>
+          <div style="height:${h}px;background:${sheets?"linear-gradient(180deg,var(--korean),var(--english))":"var(--line-2)"};border-radius:8px 8px 4px 4px"></div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-3);margin-top:4px">${wk===0?"이번 주":wk+"주 전"}<br>⭐${stars}</div></div>`; }).join("")}</div>
+      ${S.levelHist&&S.levelHist.length>=2?(()=>{ const a=S.levelHist[S.levelHist.length-2], b=S.levelHist[S.levelHist.length-1];
+        const dLine=[["국어",b.k-a.k],["수학",b.m-a.m]].map(([n,dv])=>`${n} ${dv>0?"▲+"+dv:(dv<0?"▼"+dv:"—")}`).join(" · ");
+        return `<div style="margin-top:10px;font-size:13.5px;font-weight:700">🧭 진단 변화 (${a.date} → ${b.date}): ${dLine}</div>`; })():""}
+    </div>
     <div class="panelbox full"><h3>📅 이번 주 요약</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${Array.from({length:7},(_,i)=>{
         const dd=new Date(); dd.setDate(dd.getDate()-6+i);
@@ -1531,6 +1576,8 @@ function uniqN(n,fn,keyf){ const o=[],seen=new Set(); let g=0;
   while(o.length<n)o.push(fn()); return o; }
 const REROLL={};
 const TOTAL_DAYS=120, TOTAL_UNITS=12;
+let WCOURSE=1;   /* 학습 과정: 1 씨앗 · 2 새싹 · 3 열매 (과정마다 120일 = 총 360일, 2027년 말까지) */
+const COURSE_NAMES=["","씨앗 과정","새싹 과정","열매 과정"];
 
 /* ---- 단원 구성 (12단원 · 스몰스텝) ---- */
 const MU=["수 세기와 9까지의 덧셈","한 자리 뺄셈과 10 짝꿍","받아올림 덧셈","받아내림 뺄셈","자릿값과 100까지의 수",
@@ -1636,12 +1683,17 @@ function mkSubW(lo1,hi1,maxSub){ return ()=>{ const [t,u]=wpick(SUB_T), a=wrnd(l
 function mathPaper(d){
   const u=Math.floor(d/10), late=(d%10)>=5;
   let A="",B="",C="", ansA="",ansB="",ansC="";
-  if(u===0){ /* 수 세기와 9까지 덧셈 */
-    const cnt=uniqN(6,()=>{ const n=wrnd(2,9),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
+  if(u===0){ /* 수 세기와 덧셈 — 과정별 상향(씨앗 합≤9 / 새싹 받아올림 / 열매 두 자리) */
+    const cmax=WCOURSE===1?9:12;
+    const cnt=uniqN(6,()=>{ const n=wrnd(2,cmax),e=wpick(EMOJI_POOL); return {q:`${e.repeat(n)} → `,a:n}; },x=>x.q);
     A=wsec("1","그림 세기","그림을 하나씩 세어 ▢에 수를 쓰세요.",mrows(cnt)); ansA=ansline(cnt);
-    const add=uniqN(late?10:8,()=>{ const a=wrnd(1,late?6:5),b=wrnd(1,Math.min(late?8:4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
-    B=wsec("2","합이 9까지의 덧셈","빈칸에 답을 쓰세요.",mrows(add,true)); ansB=ansline(add);
-    const w=wordProblems(2,mkAddW(2,5,1,4)); C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); ansC="문장제: 위 정답 참고";
+    const add=uniqN(late?10:8,()=>{
+      if(WCOURSE===3){ const t=wrnd(1,7),o=wrnd(0,4),b=wrnd(1,9-o),n=t*10+o; return P(`${n} + ${b}`,n+b); }
+      if(WCOURSE===2){ const a=wrnd(4,9),b=wrnd(3,9); return P(`${a} + ${b}`,a+b); }
+      const a=wrnd(1,late?6:5),b=wrnd(1,Math.min(late?8:4,9-a)); return P(`${a} + ${b}`,a+b); },x=>x.q);
+    B=wsec("2",WCOURSE===1?"합이 9까지의 덧셈":(WCOURSE===2?"받아올림 복습 덧셈":"두 자리 덧셈 복습"),"빈칸에 답을 쓰세요.",mrows(add,true)); ansB=ansline(add);
+    const w=wordProblems(2,WCOURSE===1?mkAddW(2,5,1,4):mkAddW(5,12,4,9));
+    C=wsec("3","생각하며 풀기","식을 쓰고 답을 구하세요.",w.join("")); ansC="문장제: 위 정답 참고";
   }
   if(u===1){ /* 한 자리 뺄셈과 10 짝꿍 */
     const sub=uniqN(8,()=>{ const a=wrnd(2,9),b=wrnd(1,a); return P(`${a} − ${b}`,a-b); },x=>x.q);
@@ -1735,11 +1787,13 @@ function mathPaper(d){
     const cq=wsample(CAL_Q,4).map(([q,a])=>({q,a}));
     C=wsec("3","달력 상식","물음에 답하세요.",mrows(cq)); ansC=ansline(cq);
   }
-  if(u===9){ /* 묶어 세기·돈 */
-    const gp=uniqN(6,()=>{ const g=wpick([2,5,10]),c=wrnd(2,5);
+  if(u===9){ /* 묶어 세기·돈 — 새싹·열매 과정은 곱셈구구 도입 */
+    const bank=WCOURSE===1?[2,5,10]:(WCOURSE===2?[2,3,4,5,10]:[2,3,4,5,6,7,8,9]);
+    const gp=uniqN(6,()=>{ const g=wpick(bank),c=wrnd(2,WCOURSE===1?5:9);
+      if(WCOURSE>=2&&WR()<.6) return {q:`${g} × ${c} = ▢`,a:g*c};
       return WR()<.5?{q:`${g}씩 ${c}묶음은 모두 ▢`,a:g*c}
         :{q:`${g}씩 뛰어 세기: ${g}, ${g*2}, ▢, ${g*4}`,a:g*3}; },it=>it.q);
-    A=wsec("1","묶어 세기","2씩, 5씩, 10씩 세어 보세요.",mrows(gp)); ansA=ansline(gp);
+    A=wsec("1",WCOURSE===1?"묶어 세기":"곱셈구구",WCOURSE===1?"2씩, 5씩, 10씩 세어 보세요.":"묶어 세기를 곱셈으로 나타내요.",mrows(gp)); ansA=ansline(gp);
     const mn=uniqN(4,()=>{ const c5=wrnd(0,1),c1=wrnd(1,4),c50=wrnd(0,1),c10=wrnd(0,3);
       const total=c5*500+c1*100+c50*50+c10*10;
       return {html:`<div class="mrow">${coinRow(c5,c1,c50,c10)} = <span class="blank" style="min-width:56px"></span>원<span class="ans"> ${total}</span></div>`,a:total}; },it=>it.a);
@@ -1903,7 +1957,7 @@ function vocabSection(d,u){
   return {html:wsec("1",title,instr,body), ans};
 }
 function readingSection(d,u){
-  const tier=u<4?0:(u<8?1:2);
+  const tier=Math.min(2,(u<4?0:(u<8?1:2))+(WCOURSE-1));   /* 새싹·열매 과정은 더 긴 지문 */
   const pool=[PSG1,PSG2,PSG3][tier], titles=[PSG_T1,PSG_T2,PSG_T3][tier];
   const idx=(d*7+u)%pool.length, p=pool[idx];
   const body=`<div class="passage"><div class="psg-t">${titles[idx]}</div>${p.t}</div>`+p.q.map((q,i)=>{
@@ -1915,9 +1969,9 @@ function readingSection(d,u){
 }
 function writingSection(d,u){
   let title,instr,body,ans="자유롭게 쓴 글 (정답 없음)";
-  if(u===4){ title="받아쓰기"; instr="부모님이 문장을 불러 주시면 듣고 받아쓰세요. (아래 정답 참고)";
-    body=`<div class="writeline"></div><div class="writeline"></div><div class="writeline"></div>`;
-    ans="(불러줄 문장) "+wsample(SENTENCES,3).join("  /  "); }
+  if(u===4){ const nL=2+WCOURSE; title="받아쓰기"; instr="부모님이 문장을 불러 주시면 듣고 받아쓰세요. (아래 정답 참고)";
+    body=Array(nL).fill('<div class="writeline"></div>').join("");
+    ans="(불러줄 문장) "+wsample(SENTENCES,Math.min(nL,SENTENCES.length)).join("  /  "); }
   else if(u<4){ const s=TRACE_SENT[(d+u)%TRACE_SENT.length]; title="따라 쓰기"; instr="문장을 소리 내어 읽고 두 번 따라 쓰세요.";
     body=`<div class="passage" style="text-align:center;font-size:16px">${s}</div><div class="writeline"></div><div class="writeline"></div>`; }
   else if(u<8){ const fr=COMPLETE_FR[(d+u)%COMPLETE_FR.length]; title="문장 완성하기"; instr="빈칸을 채워 나만의 문장을 완성하세요.";
@@ -1962,7 +2016,9 @@ const UPLOW=[["A","a"],["B","b"],["D","d"],["E","e"],["G","g"],["R","r"],["Q","q
 /* CVC는 앱 상단 데이터 재사용 */
 function traceRow(txt){ return `<div class="write4"><i class="t"></i><i class="m"></i><i class="b"></i><span class="tx"><b>${txt}</b>${("  "+txt).repeat(3)}</span></div>`; }
 function engPaper(d){
-  const u=Math.floor(d/10);
+  let u=Math.floor(d/10);
+  if(WCOURSE>=2&&u<=5) u=6+u;   /* 새싹·열매 과정: 알파벳 대신 단어 가족·문장 회독 */
+  if(u>11) u=11;
   let A="",B="",C="",ansA="",ansB="",ansC="";
   if(u<=4){
     const li=u*5+Math.floor((d%10)/2), L=LSOUND[Math.min(25,li)], up=L[0], lo=up.toLowerCase();
@@ -2027,6 +2083,210 @@ function engPaper(d){
     `<b>①</b> ${ansA}<br><b>②</b> ${ansB}<br><b>③</b> ${ansC}`);
 }
 
+/* ===== 🔍 세상 탐구 (사회·과학 개념 학습 — 전집 대체) ===== */
+const TAMGU=[
+ {c:"과학",e:"🌞",t:"해와 달",
+  con:["해는 낮에 떠서 세상을 밝고 따뜻하게 해줘요.","달은 밤하늘에 떠요. 날마다 모양이 조금씩 달라져요.","지구가 빙글빙글 돌기 때문에 낮과 밤이 생겨요."],
+  fun:["해는 지구보다 100만 배나 커요!","동그란 보름달은 한 달에 한 번 볼 수 있어요."],
+  quiz:[["낮을 밝게 해주는 것은? ( 해 / 달 )","해"],["달의 모양은 날마다 ( 같아요 / 달라져요 )","달라져요"],["낮과 밤이 생기는 까닭은 지구가 돌기 때문이에요. ( O / X )","O"]],
+  act:"오늘 밤 하늘의 달을 보고, 아래 상자에 달 모양을 그려 보세요."},
+ {c:"과학",e:"🌧️",t:"비는 어디서 올까?",
+  con:["햇빛을 받은 바다와 강의 물이 수증기가 되어 하늘로 올라가요.","수증기가 모여서 구름이 돼요.","구름이 무거워지면 물방울이 비가 되어 떨어져요."],
+  fun:["비가 온 뒤 흙냄새는 ‘페트리코’라는 이름이 있어요.","구름 한 개의 무게는 코끼리 수십 마리와 같아요!"],
+  quiz:[["물이 하늘로 올라가면 ( 구름 / 돌 )이 돼요","구름"],["구름이 무거워지면 ( 비 / 눈사람 )가 내려요","비"],["비는 바다와 강의 물이 변한 거예요. ( O / X )","O"]],
+  act:"비 오는 날 창밖을 보며, 빗방울이 어디로 흘러가는지 따라가 보세요."},
+ {c:"과학",e:"🍂",t:"사계절",
+  con:["우리나라에는 봄, 여름, 가을, 겨울 네 계절이 있어요.","봄엔 꽃이 피고, 여름엔 덥고, 가을엔 단풍이 들고, 겨울엔 눈이 와요.","계절에 따라 입는 옷과 하는 놀이가 달라져요."],
+  fun:["나무는 겨울에 잎을 떨어뜨려 물을 아껴요.","계절이 없는 나라도 있어요. 일 년 내내 여름인 곳도 있답니다!"],
+  quiz:[["꽃이 활짝 피는 계절은? ( 봄 / 겨울 )","봄"],["단풍이 드는 계절은 ( 가을 / 여름 )이에요","가을"],["겨울 다음에는 봄이 와요. ( O / X )","O"]],
+  act:"지금 계절에서 보이는 것 세 가지를 함께 찾아 말해 보세요."},
+ {c:"과학",e:"🌈",t:"무지개의 비밀",
+  con:["무지개는 비가 그친 뒤 해가 날 때 볼 수 있어요.","햇빛이 공중의 물방울을 지나면서 일곱 가지 색으로 나뉘어요.","빨주노초파남보 순서로 나타나요."],
+  fun:["분무기로 물을 뿌리면 작은 무지개를 만들 수 있어요!","무지개는 사실 동그란 원 모양이에요. 땅에 가려 반만 보여요."],
+  quiz:[["무지개는 몇 가지 색일까요? ( 일곱 / 백 )","일곱"],["무지개의 첫 번째 색은 ( 빨강 / 검정 )","빨강"],["무지개는 밤에 잘 보여요. ( O / X )","X"]],
+  act:"맑은 날 분무기로 해를 등지고 물을 뿌려 무지개를 만들어 보세요."},
+ {c:"과학",e:"❤️",t:"우리 몸속 심장",
+  con:["심장은 가슴 왼쪽에서 쿵쿵 뛰며 온몸에 피를 보내요.","피는 몸 구석구석에 산소와 영양분을 배달해요.","달리기를 하면 심장이 더 빨리 뛰어요."],
+  fun:["심장은 주먹만 한 크기예요.","하루에 약 10만 번이나 뛰어요!"],
+  quiz:[["심장은 온몸에 ( 피 / 우유 )를 보내요","피"],["달리면 심장이 ( 빨리 / 천천히 ) 뛰어요","빨리"],["심장은 가슴 왼쪽에 있어요. ( O / X )","O"]],
+  act:"가슴에 손을 얹고 심장 소리를 느껴 보세요. 제자리 뛰기 후 다시 느껴 보세요!"},
+ {c:"과학",e:"🦷",t:"이와 충치",
+  con:["이는 음식을 잘게 부수어 소화를 도와줘요.","단 것을 먹고 이를 닦지 않으면 충치벌레(세균)가 이를 썩게 해요.","아침, 저녁, 밥 먹은 뒤에 이를 닦아요."],
+  fun:["어린이 이는 20개, 어른 이는 28~32개예요.","상어는 이가 빠져도 계속 새로 나요!"],
+  quiz:[["이는 음식을 ( 부수어 / 얼려 ) 줘요","부수어"],["단 것을 먹고 안 닦으면 ( 충치 / 무지개 )가 생겨요","충치"],["이는 하루에 한 번만 닦으면 돼요. ( O / X )","X"]],
+  act:"오늘 이 닦기 3번, 달력에 ○표를 해보세요."},
+ {c:"과학",e:"🌱",t:"씨앗이 자라요",
+  con:["씨앗을 흙에 심고 물을 주면 싹이 터요.","식물이 자라려면 물, 햇빛, 흙이 필요해요.","싹은 줄기와 잎이 되고, 꽃이 피면 다시 씨앗이 생겨요."],
+  fun:["대나무는 하루에 1미터나 자랄 수 있어요!","세상에서 가장 큰 꽃은 어린이 키만 해요."],
+  quiz:[["씨앗이 자라려면 물과 ( 햇빛 / 사탕 )이 필요해요","햇빛"],["씨앗에서 처음 나오는 것은 ( 싹 / 열매 )","싹"],["꽃이 피면 다시 씨앗이 생겨요. ( O / X )","O"]],
+  act:"콩이나 씨앗을 젖은 솜 위에 올려두고 매일 관찰해 보세요."},
+ {c:"과학",e:"🦋",t:"나비의 한살이",
+  con:["나비는 알에서 태어나요.","알에서 나온 애벌레는 잎을 많이 먹고 자라요.","애벌레는 번데기가 되었다가, 예쁜 나비가 되어 날아가요."],
+  fun:["나비는 발로 맛을 느껴요!","애벌레는 태어났을 때보다 100배나 커져요."],
+  quiz:[["나비는 ( 알 / 돌 )에서 태어나요","알"],["애벌레 다음은 ( 번데기 / 물고기 )예요","번데기"],["알→애벌레→번데기→나비 순서예요. ( O / X )","O"]],
+  act:"알→애벌레→번데기→나비를 몸으로 표현해 보세요!"},
+ {c:"과학",e:"🐸",t:"개구리의 한살이",
+  con:["개구리는 물속에 알을 낳아요.","알에서 나온 올챙이는 꼬리로 헤엄쳐요.","올챙이는 뒷다리, 앞다리가 나오고 꼬리가 없어지며 개구리가 돼요."],
+  fun:["개구리는 눈을 감아야 음식을 삼킬 수 있어요!","겨울엔 땅속에서 겨울잠을 자요."],
+  quiz:[["개구리 아기는 ( 올챙이 / 병아리 )예요","올챙이"],["올챙이는 ( 꼬리 / 날개 )로 헤엄쳐요","꼬리"],["올챙이는 자라면서 다리가 나와요. ( O / X )","O"]],
+  act:"‘올챙이와 개구리’ 노래를 부르며 순서를 말해 보세요."},
+ {c:"과학",e:"🦖",t:"공룡 시대",
+  con:["아주아주 옛날, 사람이 살기 전에 공룡이 살았어요.","티라노사우루스처럼 고기를 먹는 공룡도, 브라키오사우루스처럼 풀을 먹는 공룡도 있었어요.","지금은 화석으로 공룡을 알 수 있어요."],
+  fun:["새는 공룡의 후손이에요!","가장 큰 공룡은 버스 3대보다 길었어요."],
+  quiz:[["공룡을 알 수 있는 돌 속 흔적을 ( 화석 / 사탕 )이라 해요","화석"],["풀 먹는 공룡도 있었어요. ( O / X )","O"],["공룡은 지금도 우리 동네에 살아요. ( O / X )","X"]],
+  act:"좋아하는 공룡을 한 마리 정해 울음소리를 흉내 내 보세요."},
+ {c:"과학",e:"🧲",t:"신기한 자석",
+  con:["자석은 쇠(철)로 된 물건을 끌어당겨요.","자석에는 N극과 S극이 있어요.","다른 극끼리는 붙고, 같은 극끼리는 밀어내요."],
+  fun:["지구도 커다란 자석이에요! 그래서 나침반 바늘이 북쪽을 가리켜요.","냉장고 문에도 자석이 숨어 있어요."],
+  quiz:[["자석은 ( 쇠 / 종이 )를 끌어당겨요","쇠"],["다른 극끼리는 서로 ( 붙어요 / 밀어요 )","붙어요"],["지구도 자석의 성질이 있어요. ( O / X )","O"]],
+  act:"집에서 자석에 붙는 물건 3가지를 찾아 보세요."},
+ {c:"과학",e:"🔦",t:"빛과 그림자",
+  con:["빛이 있는 곳에는 그림자가 생겨요.","물체가 빛을 가리면 그 뒤에 그림자가 만들어져요.","빛과 가까우면 그림자가 커지고, 멀면 작아져요."],
+  fun:["옛날 사람들은 그림자로 시간을 알았어요(해시계).","손으로 새, 강아지 그림자를 만들 수 있어요!"],
+  quiz:[["그림자는 물체가 ( 빛 / 바람 )을 가려서 생겨요","빛"],["빛과 가까우면 그림자가 ( 커져요 / 없어져요 )","커져요"],["깜깜한 곳에도 그림자가 생겨요. ( O / X )","X"]],
+  act:"손전등으로 벽에 손 그림자 동물을 만들어 보세요."},
+ {c:"과학",e:"🔔",t:"소리의 비밀",
+  con:["소리는 물체가 떨리면서 생겨요.","북을 치면 북 가죽이 떨리며 소리가 나요.","소리는 공기를 타고 우리 귀까지 와요."],
+  fun:["우주는 공기가 없어서 소리가 들리지 않아요!","고래는 아주 멀리 있는 친구와도 소리로 이야기해요."],
+  quiz:[["소리는 물체가 ( 떨려서 / 얼어서 ) 나요","떨려서"],["소리는 ( 공기 / 돌 )를 타고 전해져요","공기"],["우주에서는 소리가 잘 들려요. ( O / X )","X"]],
+  act:"목에 손을 대고 ‘아~’ 소리를 내며 떨림을 느껴 보세요."},
+ {c:"과학",e:"🛁",t:"뜨는 것과 가라앉는 것",
+  con:["물에 뜨는 물건도 있고 가라앉는 물건도 있어요.","가벼운 나무나 플라스틱은 잘 떠요.","무거운 돌이나 쇠는 가라앉아요."],
+  fun:["커다란 배가 뜨는 건 속이 비어 있기 때문이에요!","수박은 크지만 물에 떠요."],
+  quiz:[["나무는 물에 ( 떠요 / 가라앉아요 )","떠요"],["돌은 물에 ( 떠요 / 가라앉아요 )","가라앉아요"],["큰 배는 속이 비어 있어 떠요. ( O / X )","O"]],
+  act:"세숫대야에 물건 3개를 띄워 보고, 뜨는지 가라앉는지 기록해 보세요."},
+ {c:"과학",e:"🐻‍❄️",t:"동물의 겨울나기",
+  con:["곰과 다람쥐는 겨울잠을 자며 겨울을 나요.","제비 같은 새들은 따뜻한 남쪽으로 날아가요.","토끼는 두꺼운 털옷으로 갈아입어요."],
+  fun:["다람쥐는 도토리를 숨겨 두고 겨울에 꺼내 먹어요.","개구리는 얼음처럼 몸이 차가워져도 살 수 있어요!"],
+  quiz:[["곰은 겨울에 ( 겨울잠 / 수영 )을 자요","겨울잠"],["제비는 겨울에 ( 남쪽 / 북쪽 )으로 가요","남쪽"],["토끼는 겨울에 털이 더 두꺼워져요. ( O / X )","O"]],
+  act:"내가 곰이라면 겨울잠 전에 무엇을 먹을지 이야기해 보세요."},
+ {c:"과학",e:"🐳",t:"바다 친구들",
+  con:["바다에는 물고기, 고래, 문어 같은 친구들이 살아요.","고래는 물고기가 아니라 숨을 쉬러 물 위로 올라와요.","문어는 다리가 8개이고 위험하면 먹물을 뿜어요."],
+  fun:["흰수염고래는 세상에서 가장 큰 동물이에요!","해마는 아빠가 아기를 품어서 낳아요."],
+  quiz:[["고래는 숨 쉬러 ( 물 위 / 땅속 )로 와요","물 위"],["문어 다리는 ( 8개 / 2개 )","8개"],["고래는 물고기예요. ( O / X )","X"]],
+  act:"수건을 등에 대고 고래처럼 숨쉬기 흉내를 내 보세요. 푸우~!"},
+ {c:"과학",e:"🚀",t:"우주와 별",
+  con:["밤하늘에 반짝이는 것이 별이에요. 별은 아주아주 멀리 있어요.","지구는 해 주위를 도는 행성이에요.","우주선을 타면 우주에 갈 수 있어요. 달에 간 사람도 있어요!"],
+  fun:["별은 사실 해처럼 뜨거운 불덩어리예요.","우주에서는 몸이 둥둥 떠다녀요!"],
+  quiz:[["지구는 ( 해 / 달 ) 주위를 돌아요","해"],["달에 다녀온 사람이 있어요. ( O / X )","O"],["별은 손에 잡힐 만큼 가까워요. ( O / X )","X"]],
+  act:"맑은 밤에 별을 세어 보고, 나만의 별자리에 이름을 지어 보세요."},
+ {c:"과학",e:"🌋",t:"화산과 지진",
+  con:["땅속 깊은 곳은 아주 뜨거워요.","뜨거운 마그마가 솟아오르는 산이 화산이에요.","땅이 흔들리는 것을 지진이라 해요. 지진이 나면 책상 아래로 들어가 머리를 보호해요."],
+  fun:["화산재가 쌓인 땅은 식물이 잘 자라요.","우리나라 제주도 한라산도 옛날엔 화산이었어요!"],
+  quiz:[["화산에서 나오는 뜨거운 것은 ( 마그마 / 아이스크림 )","마그마"],["지진이 나면 ( 책상 아래 / 창문 옆 )로 가요","책상 아래"],["한라산은 옛날에 화산이었어요. ( O / X )","O"]],
+  act:"지진 대피 연습! ‘지진이다’ 신호에 책상 아래로 쏙 들어가 보세요."},
+ {c:"사회",e:"👨‍👩‍👧",t:"소중한 우리 가족",
+  con:["가족은 함께 살며 서로 사랑하고 도와주는 사람들이에요.","할아버지, 할머니, 엄마, 아빠, 형제자매 모두 가족이에요.","가족의 모습은 집마다 달라요. 모두 소중해요."],
+  fun:["엄마의 엄마는 외할머니라고 불러요.","세계에는 한 지붕 아래 20명 넘게 사는 대가족도 있어요!"],
+  quiz:[["가족은 서로 ( 사랑해요 / 몰라요 )","사랑해요"],["아빠의 아빠는 ( 할아버지 / 삼촌 )","할아버지"],["가족의 모습은 모두 똑같아야 해요. ( O / X )","X"]],
+  act:"가족 얼굴을 그리고, 한 명씩 ‘사랑해요’라고 말해 보세요."},
+ {c:"사회",e:"😊",t:"마음과 감정",
+  con:["기쁨, 슬픔, 화남, 무서움은 모두 소중한 감정이에요.","감정은 말로 표현하면 마음이 편해져요.","친구의 감정도 물어봐 주면 사이가 좋아져요."],
+  fun:["웃으면 몸속에서 기분 좋아지는 호르몬이 나와요!","눈물은 슬플 때 마음을 씻어 주는 역할을 해요."],
+  quiz:[["화가 날 땐 ( 말로 표현해요 / 던져요 )","말로 표현해요"],["슬픈 감정도 소중해요. ( O / X )","O"],["친구가 울면 ( 모른 척해요 / 괜찮은지 물어봐요 )","괜찮은지 물어봐요"]],
+  act:"오늘 기분을 얼굴 표정으로 그려 보고 이유를 말해 보세요."},
+ {c:"사회",e:"🙇",t:"인사와 예절",
+  con:["만나면 ‘안녕하세요’, 헤어질 땐 ‘안녕히 계세요’ 인사해요.","고마울 땐 ‘감사합니다’, 잘못했을 땐 ‘미안해요’라고 말해요.","바른 인사는 마음을 전하는 예쁜 선물이에요."],
+  fun:["나라마다 인사법이 달라요. 인도에서는 두 손을 모아 ‘나마스테’!","프랑스에서는 볼을 맞대고 인사하기도 해요."],
+  quiz:[["아침에 만나면 ( 안녕하세요 / 잘 자요 )","안녕하세요"],["도움을 받으면 ( 감사합니다 / 몰라요 )","감사합니다"],["잘못했을 때는 미안하다고 말해요. ( O / X )","O"]],
+  act:"오늘 만나는 어른께 배꼽 인사를 해 보세요."},
+ {c:"사회",e:"🚌",t:"타고 다니는 것들",
+  con:["버스와 지하철은 여러 사람이 함께 타는 대중교통이에요.","비행기는 하늘을, 배는 바다를, 기차는 철길을 다녀요.","차에 타면 꼭 안전벨트를 매요."],
+  fun:["가장 빠른 기차는 비행기만큼 빨라요!","옛날 사람들은 말을 타고 다녔어요."],
+  quiz:[["하늘을 나는 것은 ( 비행기 / 배 )","비행기"],["차에 타면 ( 안전벨트 / 모자 )를 해요","안전벨트"],["지하철은 여러 사람이 함께 타요. ( O / X )","O"]],
+  act:"창밖에서 본 탈것 3가지를 말하고 소리를 흉내 내 보세요."},
+ {c:"사회",e:"🚦",t:"교통 안전 약속",
+  con:["길을 건널 때는 꼭 횡단보도로 건너요.","초록불이어도 좌우를 살피고, 손을 들고 건너요.","길에서는 뛰지 않고 어른 손을 잡아요."],
+  fun:["세계 최초의 신호등은 가스등이었어요.","횡단보도의 흰 줄은 운전자 눈에 잘 띄라고 그린 거예요."],
+  quiz:[["길은 ( 횡단보도 / 아무 데나 )로 건너요","횡단보도"],["빨간불엔 ( 멈춰요 / 뛰어요 )","멈춰요"],["건너기 전 좌우를 살펴요. ( O / X )","O"]],
+  act:"집 근처 횡단보도에서 ‘서다-보다-손들다-건너다’를 연습해 보세요."},
+ {c:"사회",e:"🧑‍🚒",t:"고마운 직업들",
+  con:["소방관은 불을 끄고 사람을 구해요.","의사와 간호사는 아픈 사람을 치료해요.","농부는 우리가 먹는 쌀과 채소를 길러요. 모든 직업은 소중해요."],
+  fun:["소방차가 빨간색인 건 멀리서도 잘 보이기 위해서예요.","한 사람의 옷과 밥에는 수많은 사람의 수고가 담겨 있어요."],
+  quiz:[["불을 꺼 주시는 분은 ( 소방관 / 화가 )","소방관"],["아플 때는 ( 병원 / 문구점 )에 가요","병원"],["모든 직업은 소중해요. ( O / X )","O"]],
+  act:"커서 되고 싶은 직업을 그리고 이유를 말해 보세요."},
+ {c:"사회",e:"🛒",t:"시장과 돈",
+  con:["시장과 마트에서 물건을 살 수 있어요.","물건을 사려면 돈을 내요. 돈은 일해서 벌어요.","사고 싶은 것을 다 살 수는 없어서, 필요한 것을 먼저 사요."],
+  fun:["옛날에는 돈 대신 쌀이나 조개로 물건을 바꿨어요!","저금통에 모은 돈으로 더 큰 것을 살 수 있어요."],
+  quiz:[["물건을 사려면 ( 돈 / 낙엽 )이 필요해요","돈"],["돈은 ( 일해서 / 하늘에서 ) 얻어요","일해서"],["필요한 것을 먼저 사요. ( O / X )","O"]],
+  act:"집에서 가게 놀이를 해 보세요. 동전으로 값을 치러 봐요!"},
+ {c:"사회",e:"🏥",t:"병원은 무서운 곳이 아니야",
+  con:["아프면 병원에 가서 의사 선생님께 진찰을 받아요.","주사와 약은 병을 물리치는 든든한 무기예요.","예방주사를 미리 맞으면 병에 잘 걸리지 않아요."],
+  fun:["청진기로는 심장과 숨소리를 들을 수 있어요.","반창고를 붙이면 상처에 세균이 못 들어와요."],
+  quiz:[["아프면 ( 병원 / 놀이터 )에 가요","병원"],["예방주사는 병을 ( 막아줘요 / 만들어요 )","막아줘요"],["의사 선생님은 우리를 도와주는 분이에요. ( O / X )","O"]],
+  act:"인형 병원 놀이! 인형의 심장 소리를 듣고 반창고를 붙여 주세요."},
+ {c:"사회",e:"📚",t:"도서관과 유치원",
+  con:["도서관은 책을 읽고 빌리는 곳이에요. 조용히 해야 해요.","유치원과 학교는 친구들과 함께 배우는 곳이에요.","공공장소에서는 뛰지 않고 차례를 지켜요."],
+  fun:["세계에서 가장 큰 도서관에는 책이 1억 권도 넘게 있어요!","책을 많이 읽으면 머릿속에 이야기 나라가 생겨요."],
+  quiz:[["도서관에서는 ( 조용히 / 크게 노래 ) 해요","조용히"],["빌린 책은 ( 돌려줘요 / 가져요 )","돌려줘요"],["차례를 지키면 모두가 기분 좋아요. ( O / X )","O"]],
+  act:"이번 주에 도서관에 가서 책 한 권을 직접 골라 보세요."},
+ {c:"사회",e:"🇰🇷",t:"우리나라 대한민국",
+  con:["우리나라 이름은 대한민국이에요.","우리나라 국기는 태극기, 꽃은 무궁화예요.","우리는 세종대왕이 만든 한글을 써요."],
+  fun:["태극기의 동그라미는 조화를 뜻해요.","한글은 하루면 배울 수 있는 과학적인 글자로 유명해요!"],
+  quiz:[["우리나라 국기는 ( 태극기 / 별기 )","태극기"],["한글을 만든 분은 ( 세종대왕 / 이순신 )","세종대왕"],["우리나라 꽃은 무궁화예요. ( O / X )","O"]],
+  act:"태극기를 색칠해 보고, 어디에 걸려 있는지 찾아 보세요."},
+ {c:"사회",e:"🎎",t:"설날과 추석",
+  con:["설날은 새해 첫날이에요. 어른께 세배를 드리고 떡국을 먹어요.","추석은 가을 명절이에요. 송편을 빚고 보름달을 봐요.","명절에는 가족과 친척이 모여 서로의 건강을 빌어요."],
+  fun:["떡국을 먹으면 나이를 한 살 더 먹는다고 해요!","송편 속에는 깨, 콩, 밤이 들어가요."],
+  quiz:[["설날에는 ( 떡국 / 케이크 )을 먹어요","떡국"],["추석에 빚는 떡은 ( 송편 / 도넛 )","송편"],["명절에는 가족이 모여요. ( O / X )","O"]],
+  act:"세배하는 법을 연습하고 ‘새해 복 많이 받으세요’를 말해 보세요."},
+ {c:"사회",e:"🌍",t:"세계 여러 나라",
+  con:["지구에는 많은 나라가 있고, 나라마다 말과 음식이 달라요.","미국, 중국, 프랑스, 케냐… 모두 지구 가족이에요.","다른 나라 문화도 소중히 여겨요."],
+  fun:["이탈리아에서 피자가, 미국에서 햄버거가 태어났어요.","세계에는 7,000개가 넘는 언어가 있어요!"],
+  quiz:[["나라마다 말이 ( 달라요 / 같아요 )","달라요"],["피자의 고향은 ( 이탈리아 / 남극 )","이탈리아"],["다른 나라 문화도 소중해요. ( O / X )","O"]],
+  act:"지구본이나 지도에서 가 보고 싶은 나라를 찾아 짚어 보세요."},
+ {c:"사회",e:"🗺️",t:"지도와 방향",
+  con:["지도는 하늘에서 내려다본 땅의 그림이에요.","지도에는 산, 강, 길, 집이 그려져 있어요.","해가 뜨는 쪽이 동쪽, 지는 쪽이 서쪽이에요."],
+  fun:["보물 지도처럼 X 표시로 위치를 나타낼 수 있어요!","내비게이션도 지도를 보고 길을 알려 주는 거예요."],
+  quiz:[["지도는 땅을 ( 위 / 아래 )에서 본 그림이에요","위"],["해가 뜨는 쪽은 ( 동쪽 / 서쪽 )","동쪽"],["지도에는 길과 집이 그려져 있어요. ( O / X )","O"]],
+  act:"우리 집에서 놀이터까지 가는 길을 보물 지도로 그려 보세요."},
+ {c:"사회",e:"♻️",t:"지구를 지켜요",
+  con:["쓰레기는 종이, 플라스틱, 캔으로 나누어 버려요(분리배출).","물과 전기를 아껴 쓰면 지구가 덜 아파요.","나무와 동물을 아끼는 마음이 지구를 지켜요."],
+  fun:["플라스틱 병 하나가 썩는 데 500년이 걸려요!","분리배출한 페트병은 옷으로 다시 태어날 수 있어요."],
+  quiz:[["쓰레기는 ( 나누어 / 아무렇게나 ) 버려요","나누어"],["쓰지 않는 불은 ( 꺼요 / 켜둬요 )","꺼요"],["페트병은 옷으로 재활용될 수 있어요. ( O / X )","O"]],
+  act:"오늘 분리배출을 아이가 직접 나누어 보게 해 주세요."},
+ {c:"사회",e:"💧",t:"아껴 쓰는 습관",
+  con:["양치할 때 컵을 쓰면 물을 아낄 수 있어요.","안 쓰는 방의 불은 꺼요.","장난감과 옷을 아껴 쓰고, 나눠 쓰면 더 좋아요."],
+  fun:["양치 컵을 쓰면 물 30컵을 아낄 수 있어요!","우리가 아낀 전기는 지구의 선물이 돼요."],
+  quiz:[["양치할 땐 ( 컵 / 바가지 )을 써요","컵"],["안 쓰는 불은 ( 꺼요 / 그냥 둬요 )","꺼요"],["장난감을 아껴 쓰면 좋아요. ( O / X )","O"]],
+  act:"오늘 하루 ‘아끼기 탐정’이 되어 아낄 수 있는 것을 3개 찾아 보세요."},
+ {c:"사회",e:"⏰",t:"하루의 시간",
+  con:["하루는 아침, 점심(낮), 저녁, 밤으로 흘러가요.","아침에 일어나 밥을 먹고, 낮에 활동하고, 밤에 자요.","정해진 시간에 자고 일어나면 몸이 튼튼해져요."],
+  fun:["하루는 24시간이에요.","일찍 자는 동안 키가 쑥쑥 자라요!"],
+  quiz:[["해가 뜨는 때는 ( 아침 / 밤 )","아침"],["잠은 ( 밤 / 낮 )에 자요","밤"],["하루는 24시간이에요. ( O / X )","O"]],
+  act:"나의 하루를 아침-낮-저녁-밤 4칸 그림으로 그려 보세요."},
+ {c:"사회",e:"🤝",t:"친구와 사이좋게",
+  con:["친구와는 장난감을 나눠 쓰고 차례를 지켜요.","친구가 싫어하는 행동은 하지 않아요.","다투면 ‘미안해’, 화해하면 ‘고마워’라고 말해요."],
+  fun:["함께 놀면 혼자 놀 때보다 두 배 즐거워요!","‘친구’라는 말은 오래 두고 가깝게 사귄 사람이라는 뜻이에요."],
+  quiz:[["장난감은 ( 나눠 써요 / 혼자 써요 )","나눠 써요"],["다투면 ( 미안해 / 흥! ) 하고 말해요","미안해"],["차례를 지키면 모두 즐거워요. ( O / X )","O"]],
+  act:"친구(또는 가족)에게 오늘 고마웠던 일을 한 가지 말해 보세요."},
+ {c:"사회",e:"🛡️",t:"소중한 나를 지켜요",
+  con:["내 몸은 소중해요. 누가 함부로 만지면 ‘싫어요!’ 하고 말해요.","무섭거나 이상한 일이 있으면 꼭 어른에게 알려요.","이름, 집 주소, 부모님 전화번호를 기억해 두면 좋아요."],
+  fun:["도움이 필요할 때는 112(경찰), 119(구조)에 전화해요.","‘안 돼요, 싫어요, 도와주세요’는 나를 지키는 마법의 말이에요."],
+  quiz:[["싫은 행동에는 ( 싫어요 / 그냥 참아요 )라고 말해요","싫어요"],["무서운 일은 ( 어른에게 알려요 / 숨겨요 )","어른에게 알려요"],["도움이 필요하면 112나 119에 전화해요. ( O / X )","O"]],
+  act:"부모님 전화번호를 노래처럼 만들어 외워 보세요."},
+];
+const TAMGU_GUIDE={
+ "과학":{c:"과학 개념은 외우기보다 ‘신기하다!’는 경험이 먼저예요.",t:["개념을 읽고 ‘왜 그럴까?’ 한 번 물어봐 주세요.","가족 탐구 활동을 꼭 함께 해 보세요. 몸으로 배운 건 오래가요."]},
+ "사회":{c:"사회 개념은 우리 생활과 연결 지을 때 쏙쏙 들어와요.",t:["‘우리 집에서는 어때?’라고 아이 경험과 이어 주세요.","정답보다 아이의 생각을 먼저 들어 주세요."]}};
+function tamguPaper(d){
+  const idx=(d+(WCOURSE-1)*13)%TAMGU.length, tp=TAMGU[idx];
+  const conHTML=`<div class="tg-hero"><span class="tg-emoji">${tp.e}</span>
+      <div><div class="tg-cat">${tp.c==="과학"?"🔬 과학":"🏘️ 사회"} 탐구</div><div class="tg-title">${tp.t}</div></div></div>
+    <div class="tg-con">${tp.con.map((c,i)=>`<div class="tg-line"><span class="tg-no">${i+1}</span>${c}</div>`).join("")}</div>`;
+  const funHTML=tp.fun.map(f=>`<div class="tg-fun">💡 ${f}</div>`).join("");
+  const quizHTML=tp.quiz.map((q,i)=>
+    `<div class="kitem"><span class="no">${i+1}</span>${q[0]}<span class="ans"> → ${q[1]}</span></div>`).join("");
+  const actHTML=`<div class="kitem" style="font-weight:700">👨‍👩‍👧 ${tp.act}</div>
+    <div class="drawbox"></div>`;
+  const inner=wsec("1","오늘의 개념 — 소리 내어 읽어요","한 줄씩 함께 읽고, 아이 말로 다시 말해 보게 해 주세요.",conHTML)
+    +wsec("2","알아두면 좋아요","신기한 사실! 아이와 ‘우와’ 해 보세요.",funHTML)
+    +wsec("3","확인 문제","알맞은 말에 ○ 하세요.",quizHTML)
+    +wsec("4","가족 탐구 활동","오늘의 개념을 몸으로 경험해요. 그림으로 남겨도 좋아요.",actHTML);
+  return paperShell(d,"tamgu","var(--tamgu)","탐구",`${tp.c} · ${tp.t}`,TAMGU_GUIDE[tp.c],inner,
+    tp.quiz.map((q,i)=>`${i+1}) ${q[1]}`).join("&nbsp;&nbsp; "));
+}
+
 /* ---- 공통 종이 틀 ---- */
 function paperShell(d,subj,color,subjLabel,unitTitle,guide,inner,ansHtml){
   return `<div class="paper" style="--sc:${color}">
@@ -2043,8 +2303,9 @@ function paperShell(d,subj,color,subjLabel,unitTitle,guide,inner,ansHtml){
     <div class="ansbox"><div class="at">정답 (부모용)</div><div class="al">${ansHtml}</div></div></div>`;
 }
 function dayPapers(d){
-  WR=mulberry32(d*7919+(REROLL[d]||0)*104729+13);
-  const out=[mathPaper(d),korPaper(d),engPaper(d)];
+  WCOURSE=S.course||1;
+  WR=mulberry32(d*7919+(REROLL[d]||0)*104729+(WCOURSE-1)*1000003+13);
+  const out=[mathPaper(d),korPaper(d),engPaper(d),tamguPaper(d)];
   WR=Math.random;
   return out;
 }
@@ -2059,17 +2320,62 @@ function taskSeq(){ const seq=[];
   for(let d=start;d<TOTAL_DAYS;d++) seq.push({key:"d"+d,type:"d",i:d,label:`${d+1}일차`,title:MU[Math.floor(d/10)]});
   return seq;
 }
-function nextTask(){ return taskSeq().find(t=>!isDone(t.key))||null; }
+function nextTask(){
+  /* 복습이 최우선 — 부족한 부분은 해결하고 넘어가요 (스몰스텝 반복 원칙) */
+  if(S.reviewQueue&&S.reviewQueue.length){ const r=S.reviewQueue[0];
+    const isC=r.key[0]==="c"; const i=Number(r.key.slice(1));
+    return {key:r.key,type:isC?"c":"d",i,review:true,subs:r.subs,
+      label:(isC?`맞춤 C${i+1}`:`${i+1}일차`)+" 복습",
+      title:(isC?CC_TITLE_M[i]:MU[Math.floor(i/10)])+` · ${(r.subs||[]).join("·")} 다시 풀기`}; }
+  return taskSeq().find(t=>!isDone(t.key))||null;
+}
 function doneCount(){ return taskSeq().filter(t=>isDone(t.key)).length; }
+function doneFlow(key,subs){
+  if(!S.reviewQueue) S.reviewQueue=[];
+  const hi=S.reviewQueue.findIndex(r=>r.key===key);
+  if(hi>-1) S.reviewQueue.splice(hi,1);               /* 복습 완료 → 큐에서 해제 */
+  if(subs&&subs.length) S.reviewQueue.push({key,subs:subs.slice(),date:todayStr()});
+  if(!isDone(key)) markDone(key); else { S.stars+=3; save(); }
+  bigConfetti();
+  speak(subs&&subs.length?"오늘도 수고했어요! 틀린 부분은 내일 다시 만나요!":"오늘 학습 끝! 정말 잘했어요!");
+  refreshHero();
+}
+function showGradeBar(key,btnId,subjects){
+  if(document.getElementById("gradeBar")) return;
+  const bar=document.createElement("div"); bar.id="gradeBar"; bar.className="book-intro";
+  bar.style.borderColor="color-mix(in srgb,var(--ok) 45%, var(--line))";
+  bar.innerHTML=`<b style="color:var(--ink)">채점하셨나요?</b> 많이 틀린 과목만 눌러 주세요.
+    <span style="font-size:12px;color:var(--ink-3)">(선택한 과목은 ‘오늘의 학습’에 복습으로 자동 등록돼요 · 없으면 바로 저장)</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${subjects.map(s=>`<button class="pill" data-gs="${s}">${s}</button>`).join("")}
+      <button class="pill accent" id="gbSave" style="--ac:var(--ok)">💾 저장하고 완료</button></div>`;
+  const mount=document.getElementById("paperMount");
+  mount.parentNode.insertBefore(bar,mount);
+  bar.querySelectorAll("[data-gs]").forEach(b=>b.onclick=()=>b.classList.toggle("on"));
+  document.getElementById("gbSave").onclick=()=>{
+    const subs=[...bar.querySelectorAll("[data-gs].on")].map(b=>b.dataset.gs);
+    doneFlow(key,subs); bar.remove();
+    const btn=document.getElementById(btnId); if(btn) btn.textContent="✓ 완료됨";
+  };
+  bar.scrollIntoView({block:"center"});
+}
 
 /* ---- 화면 ---- */
 function renderBook(){
   const recDay=CHILD_CFG.startDay||(S.level&&S.level.rec)||null;
   const reco=recDay?` 🧭 ${CHILD_CFG.startDay?"맞춤 설정":"레벨 테스트"} 결과, <b>${recDay}일차</b>부터 시작하는 것을 추천해요 (테두리 표시).`:"";
   const cfgNote=CHILD_CFG.note?`<br>💡 <b>맞춤 안내</b> — ${CHILD_CFG.note}`:"";
-  secBody.innerHTML=`<div class="book-intro">📚 <b>120일 완성 커리큘럼</b> — 하루 <b>3장(수학·국어·영어)</b>씩,
-    10일마다 단원이 올라가요. 주 5일이면 <b>올해 12월 말까지</b> 딱 맞아요.
-    같은 일차는 항상 같은 문제가 나오고, <b>새 문제</b>를 누르면 숫자만 바뀐 복습용 학습지가 나와요.${reco}${cfgNote}
+  const cur=S.course||1;
+  secBody.innerHTML=`<div class="book-intro">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <b style="font-size:15px;color:var(--ink)">학습 과정</b>
+      <span class="seg" id="courseSeg">${[1,2,3].map(c=>
+        `<button data-cs="${c}" class="${cur===c?"on":""}">${c}단계 ${COURSE_NAMES[c]}</button>`).join("")}</span>
+      <span style="font-size:12px;color:var(--ink-3);font-weight:700">과정마다 120일 · 3개 과정 = 2027년 말까지</span></div>
+    📚 <b>${COURSE_NAMES[cur]} 120일</b> — 하루 <b>4장(수학·국어·영어·탐구)</b>씩, 10일마다 단원이 올라가요.
+    🔍 <b>탐구</b>는 사회·과학 개념을 쉽게 풀어낸 전집형 학습지예요(36가지 주제).
+    같은 일차는 항상 같은 문제, <b>새 문제</b>는 숫자만 바뀐 복습용이에요.${reco}${cfgNote}
+    <div style="margin-top:10px"><button class="pill accent" id="printWeek" style="--ac:var(--book)">🖨 이번 주 5일치 한 번에 인쇄</button></div>
     <br><span style="font-size:12.5px">※ 인쇄는 <b>홈페이지 주소</b>로 연 브라우저에서 눌러 주세요. 미리보기 창 안에서는 인쇄가 막힐 수 있어요.</span></div>
     <div class="unit" style="border-color:color-mix(in srgb,var(--korean) 40%, var(--line));background:color-mix(in srgb,var(--korean) 3%, var(--surface))">
       <div class="unit-h"><span class="un" style="background:var(--korean)">🌸 맞춤</span>
@@ -2079,12 +2385,20 @@ function renderBook(){
         `<button class="daychip${isDone("c"+i)?" done":""}" data-c="${i}" style="border-color:color-mix(in srgb,var(--korean) 45%, var(--line));color:var(--korean)">${isDone("c"+i)?"✓":""}C${i+1}</button>`).join("")}</div></div>
     <div id="unitList"></div>`;
   secBody.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>openCustomDay(Number(b.dataset.c)));
+  document.querySelectorAll("#courseSeg button").forEach(b=>b.onclick=()=>{
+    S.course=Number(b.dataset.cs); save(); renderBook(); refreshHero(); });
+  document.getElementById("printWeek").onclick=()=>{
+    const tasks=taskSeq().filter(t=>!isDone(t.key)).slice(0,5); let html="";
+    tasks.forEach(t=>{ html+= t.type==="c" ? ccPapers(t.i).join("") : dayPapers(t.i).join(""); });
+    if(!html){ return; }
+    document.body.classList.add("print-ws");
+    document.getElementById("printMount").innerHTML=html; window.print(); };
   const list=document.getElementById("unitList");
   for(let u=0;u<TOTAL_UNITS;u++){
     const div=document.createElement("div"); div.className="unit";
     div.innerHTML=`<div class="unit-h"><span class="un">${u+1}단원</span>
       <span class="ut">➕ ${MU[u]}</span><span class="us">📖 ${KU[u]} · 🔤 ${EU[u]}</span>
-      <button class="pill uprint" data-u="${u}">🖨 단원 인쇄(30장)</button></div>
+      <button class="pill uprint" data-u="${u}">🖨 단원 인쇄(40장)</button></div>
       <div class="unit-days">${Array.from({length:10},(_,i)=>{ const dd=u*10+i;
         const rc=recDay===dd+1?" reco":""; const dn=isDone("d"+dd)?" done":"";
         return `<button class="daychip${rc}${dn}" data-d="${dd}">${isDone("d"+dd)?"✓":""}${dd+1}</button>`; }).join("")}</div>`;
@@ -2102,7 +2416,7 @@ function openDay(d){ if(location.hash==="#day/"+d) route(); else location.hash="
 function openDayView(d){
   secBody.innerHTML=`<div class="toolbar">
     <button class="pill" id="tBack">← 목록</button>
-    <button class="pill accent" id="tPrint" style="--ac:var(--book)">🖨 오늘 3장 인쇄</button>
+    <button class="pill accent" id="tPrint" style="--ac:var(--book)">🖨 오늘 4장 인쇄</button>
     <button class="pill" id="tNew">🔄 새 문제</button>
     <button class="pill" id="tAns">✅ 정답 보기</button>
     <button class="pill accent" id="tDone" style="--ac:var(--ok)">${isDone("d"+d)?"✓ 완료됨":"🌟 오늘 학습 완료!"}</button></div>
@@ -2116,9 +2430,7 @@ function openDayView(d){
   document.getElementById("tPrint").onclick=()=>{
     document.body.classList.add("print-ws");
     document.getElementById("printMount").innerHTML=dayPapers(d).join(""); window.print(); };
-  document.getElementById("tDone").onclick=()=>{
-    if(markDone("d"+d)){ bigConfetti(); speak("오늘 학습 끝! 정말 잘했어요!");
-      document.getElementById("tDone").textContent="✓ 완료됨"; refreshHero(); } };
+  document.getElementById("tDone").onclick=()=>showGradeBar("d"+d,"tDone",["수학","국어","영어","탐구"]);
 }
 /* ===== 🌸 다현이 맞춤 5일 코스 — 진단(국어 Lv3·수학 Lv2) 기반 브리지 커리큘럼 ===== */
 const CC_MG=[
@@ -2257,9 +2569,7 @@ function openCustomDayView(i){
   document.getElementById("cPrint").onclick=()=>{
     document.body.classList.add("print-ws");
     document.getElementById("printMount").innerHTML=ccPapers(i).join(""); window.print(); };
-  document.getElementById("cDone").onclick=()=>{
-    if(markDone("c"+i)){ bigConfetti(); speak("오늘 학습 끝! 정말 잘했어요!");
-      document.getElementById("cDone").textContent="✓ 완료됨"; refreshHero(); } };
+  document.getElementById("cDone").onclick=()=>showGradeBar("c"+i,"cDone",["수학","국어"]);
 }
 
 /* ===== Confetti ===== */
